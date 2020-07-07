@@ -131,7 +131,7 @@ def process_param_str(args):
 						if len(args) > 1 and not args[1].startswith('-'):
 							raise IncorrectUsageError(" ".join(args))
 						else:
-							params[flags[a]['name']] = args[0]
+							params[flags[a]['name']] = True
 						args = args[1:len(args)]
 				else:
 					raise IncorrectUsageError(" ".join(args))
