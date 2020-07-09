@@ -28,7 +28,7 @@ def calculate_event_frequency(event_counts, total_processes, threshold):
 	events = sort_events(events)
 	return events
 
-def count_events(process, container, key)
+def count_events(process, container, key):
 	for event in process[key]:
 		if event in container:
 			container[event] = container[event] + 1
