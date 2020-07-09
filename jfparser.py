@@ -113,7 +113,7 @@ def process_params(args):
 							flags[a]['assigned'] = True
 						args = args[1:len(args)]
 				else:
-					raise jfexceptions.IncorrectUsageError(" ".join(args))
+					raise jfexceptions.NoSuchArgumentError(a)
 	
 	# import server name and api_key
 	params = jfutil.import_conf(params)
