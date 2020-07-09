@@ -17,9 +17,9 @@ spawn it are returned.
 
 Usage:
 
-by_process      -> python jetfreq.py <search_name> [-u <username> -s <start_time> -w <output_file> -n <sample_size> -t <threshold> -vrfcdx]
-by_modload      -> python jetfreq.py <search_name> -m [-u <username> -s <start_time> -w <output_file> -n <sample_size> -t <threshold> -v]
-show_help       -> python jetfreq.py -h
+by_process => 'python jetfreq.py <search_name> [-u <username> -s <start_time> -w <output_file> -n <sample_size> -t <threshold> -vrfcdx]'
+by_modload => 'python jetfreq.py <search_name> -m [-u <username> -s <start_time> -w <output_file> -n <sample_size> -t <threshold> -v]'
+show_help  => 'python jetfreq.py -h'
 
 Parameters:
 
