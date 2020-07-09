@@ -19,31 +19,75 @@ def sort_events(events):
 			j = j + 1
 	return events
 
-def analyze(params, data):
+def calculate_event_frequency(event_counts, total_processes, threshold):
+	events = []
+	for key in event_counts:
+		perc = round((event_counts[key]/float(total_processes))*100, 4)
+		if perc <= float(threshold):
+			events.append(EventFreq(key, perc))
+	events = sort_events(events)
+	return events
 
-	total_processes = len(data)
-	
+def count_events(process, container, key)
+	for event in process[key]:
+		if event in container:
+			container[event] = container[event] + 1
+		else:
+			container[event] = 1
+	return container
+
+def analyze_by_process(params, data):
 	jfutil.debug(params['verbose'], "Conducting analysis for {}".format(params['search_name']))
 
 	# do count
-	modloads = {}
+	event_counts = {
+		'modloads':{},
+		'regmods':{},
+		'childprocs':{},
+		'filemods':{},
+		'netconns':{},
+		'crossprocs':{}
+	}
 	for process in data:
 		if 'modloads' in process:
-			for modload in process['modloads']:
-				if modload in modloads:
-					modloads[modload] = modloads[modload] + 1
-				else:
-					modloads[modload] = 1
+			event_counts['modloads'] = count_events(process, event_counts['modloads'], 'modloads')
+		if 'regmods' in process:
+			event_counts['regmods'] = count_events(process, event_counts['regmods'], 'regmods')
+		if 'childprocs' in process:
+			event_counts['childprocs'] = count_events(process, event_counts['childprocs'], 'childprocs')
+		if 'filemods' in process:
+			event_counts['filemods'] = count_events(process, event_counts['filemods'], 'filemods')
+		if 'netconns' in process:
+			event_counts['netconns'] = count_events(process, event_counts['netconns'], 'netconns')
+		if 'crossprocs' in process:
+			event_counts['crossprocs'] = count_events(process, event_counts['crossprocs'], 'crossprocs')
 	jfutil.debug(params['verbose'], 'Count complete')
 
 	# calculate frequencies	and exclude processes that exceed threshold
-	events = []
-	for key in modloads:
-		perc = round((modloads[key]/float(total_processes))*100, 4)
-		if perc <= float(params['threshold']):
-			events.append(EventFreq(key, perc))
+	event_freqs = {
+		'modloads':None,
+		'regmods':None,
+		'childprocs':None,
+		'filemods':None,
+		'netconns':None,
+		'crossprocs':None
+	}
+	for key in event_counts:
+		if len(event_counts['modloads']) > 0:
+			event_freqs['modloads'] = calculate_event_frequency(event_counts['modloads'], len(data), params['threshold'])
+		if len(event_counts['regmods']) > 0:
+			event_freqs['regmods'] = calculate_event_frequency(event_counts['regmods'], len(data), params['threshold'])
+		if len(event_counts['childprocs']) > 0:
+			event_freqs['childprocs'] = calculate_event_frequency(event_counts['childprocs'], len(data), params['threshold'])
+		if len(event_counts['filemods']) > 0:
+			event_freqs['filemods'] = calculate_event_frequency(event_counts['filemods'], len(data), params['threshold'])
+		if len(event_counts['netconns']) > 0:
+			event_freqs['netconns'] = calculate_event_frequency(event_counts['netconns'], len(data), params['threshold'])
+		if len(event_counts['crossprocs']) > 0:
+			event_freqs['crossprocs'] = calculate_event_frequency(event_counts['crossprocs'], len(data), params['threshold'])
 	jfutil.debug(params['verbose'], "Percentage calculations complete")
 	
-	events = sort_events(events)
-	
-	return events
+	return event_freqs
+
+def analyze_by_modload(params, data):
+	pass
