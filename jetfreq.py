@@ -61,18 +61,17 @@ try:
 	else:
 		data = jfnet.get_data_for_modload(params)
 	
-	analysis = jfanalyze.analyze(params, data)
+	# calculate the frequencies of each event type
+	events = jfanalyze.analyze(params, data)
 	
-	jfutil.debug(True, " === RESULTS FOR {} ===".format(params['search_name']))
-	jfutil.debug(True, "  Perc\t|  Modload Path")
-	jfutil.debug(True, "---------------------------")
-	for key in analysis:
-		jfutil.debug(True, "  {}%\t|  {}".format(analysis[key], key))
-	# write to file or dump to stdout
-#	if params['write_file'] != None:
-#		jfutil.out_file(data, params)
-#	else:
-#		print(format_report(data, params))
+	# format report
+	report = jfutil.format_report(params, events)
+	
+	# dump or write
+	if params['write-file'] == None:
+		jfutil.out_file(report)
+	else:
+		print(report)
 
 except jfexceptions.IncorrectUsageError as err:
 	jfutil.debug(True, "Incorrect usage at argument: {}".format(err.context))
