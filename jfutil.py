@@ -3,10 +3,37 @@ import jfexceptions
 
 def debug(verbose, message):
 	if verbose:
-		print("jetfreq.py: {}".format(message))
+		if type(message) == list:
+			for line in message:
+				print("jetfreq.py: {}".format(line))
+		else:
+			print("jetfreq.py: {}".format(message))
 
-def format_report(params, data):
-	# format the data into a human-readable format
+def append_to_report(report, event_freqs, event_type):
+	report.append(':: {}'.format(event_type))
+	for event in event_freqs:
+		report.append('::: {}% || {}'.format(event.perc, event.path))
+	return report
+			
+def format_report_by_process(params, event_freqs):
+	report = []
+	report.append(': RESULTS FOR {} {}'.format('MODLOAD' if params['by_modload'] else 'PROCESS', params['search_name'].upper()))
+	if len(event_freqs['modloads']) > 0:
+		report = append_to_report(report, event_freqs['modloads'], 'MODLOADS')
+	if len(event_freqs['regmods']) > 0:
+		report = append_to_report(report, event_freqs['regmods'], 'REGMODS')
+	if len(event_freqs['childprocs']) > 0:
+		report = append_to_report(report, event_freqs['childprocs'], 'CHILDPROCS')
+	if len(event_freqs['filemods']) > 0:
+		report = append_to_report(report, event_freqs['filemods'], 'FILEMODS')
+	if len(event_freqs['netconns']) > 0:
+		report = append_to_report(report, event_freqs['netconns'], 'NETCONNS')
+	if len(event_freqs['crossprocs']) > 0:
+		report = append_to_report(report, event_freqs['crossprocs'], 'CROSSPROCS')
+	report.append(': END')
+	return report
+
+def format_report_by_modload(params, data):
 	pass
 
 def out_file(params, data):
