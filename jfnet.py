@@ -68,31 +68,31 @@ def get_data_for_process(params):
 
 			if params['filemods'] == True:
 				if 'filemod_complete' in data['process']:
-					event['filemods'] = data['process']['filemod_complete']
+					event['filemods'] = jutil.get_event_paths(data['process']['filemod_complete'], 2)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no filemods".format(i['process_id']))
 
 			if params['regmods'] == True:
 				if 'regmod_complete' in data['process']:
-					event['regmods'] = data['process']['regmod_complete']
+					event['regmods'] = jutil.get_event_paths(data['process']['regmod_complete'], 2)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no regmods".format(i['process_id']))
 
 			if params['childprocs'] == True:
 				if 'childproc_complete' in data['process']:
-					event['childprocs'] = data['process']['childproc_complete']
+					event['childprocs'] = jutil.get_event_paths(data['process']['childproc_complete'], 3)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no childprocs".format(i['process_id']))
 
 			if params['crossprocs'] == True:
 				if 'crossproc_complete' in data['process']:
-					event['crossprocs'] = data['process']['crossproc_complete']
+					event['crossprocs'] = jutil.get_event_paths(data['process']['crossproc_complete'], 4)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no crossprocs".format(i['process_id']))
 
 			if params['netconns'] == True:
 				if 'netconn_complete' in data['process']:
-					event['netconns'] = data['process']['netconn_complete']
+					event['netconns'] = jutil.get_event_paths(data['process']['netconn_complete'], 4)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no netconns".format(i['process_id']))
 			
