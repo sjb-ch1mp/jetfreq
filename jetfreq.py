@@ -71,7 +71,7 @@ try:
 		report = jfutil.format_report_by_process(params, event_freqs)
 	
 	# dump or write
-	if params['write-file'] == None:
+	if not params['write-file'] == None:
 		jfutil.out_file(params, report)
 	else:
 		jfutil.debug(True, report)
