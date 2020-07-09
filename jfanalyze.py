@@ -3,6 +3,22 @@ import jfexceptions
 import re
 import json
 
+class EventFreq():
+	def __init__(self, path, perc):
+		self.path = path
+		self.perc = perc
+		
+def sort_events(events):
+	for i in len(events):
+		j = i
+		while j < len(events):
+			if events[i].perc > events[j].perc:
+				hold = events[i]
+				events[i] = events[j]
+				events[j] = hold
+			j = j + 1
+	return events
+
 def analyze(params, data):
 
 	total_processes = len(data)
@@ -21,11 +37,13 @@ def analyze(params, data):
 	jfutil.debug(params['verbose'], 'Count complete')
 
 	# calculate frequencies	and exclude processes that exceed threshold
-	results = {}
+	events = []
 	for key in modloads:
-		perc = (modloads[key]/total_processes)*100
-		if perc <= params['threshold']:
-			results[key] = perc
+		perc = round((modloads[key]/float(total_processes))*100, 4)
+		if perc <= float(params['threshold']):
+			events.append(EventFreq(key, perc))
 	jfutil.debug(params['verbose'], "Percentage calculations complete")
-
-	return results
+	
+	events = sort_events(events)
+	
+	return events
