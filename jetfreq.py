@@ -28,10 +28,7 @@ try:
 		jfutil.show_help()
 		exit()
 
-#FIXME : Disabling regmods, filemods, childprocs, crossprocs and netconns until the modloads feature has been finished
-	if params['regmods'] == True or params['filemods'] == True or params['netconns'] == True or params['crossprocs'] == True or params['childprocs'] == True:
-		jfutil.debug(True, "Sorry, the features for the -rfdxc flags are still under development")
-		exit()
+#FIXME : Disabling by_modloads mode during development
 	if params['by_modload'] == True:
 		jfutil.debug(True, "Sorry, the by_modload feature (-m) is still under development")
 		exit()
