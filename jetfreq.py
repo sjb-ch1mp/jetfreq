@@ -18,9 +18,10 @@ import jfexceptions
 import jfutil
 import jfnet
 import jfanalyze
+import jfparser
 
 try:	
-	params = jfutil.process_params(sys.argv)
+	params = jfparser.process_params(sys.argv)
 	
 	# check for help flag
 	if params['help'] == True:
