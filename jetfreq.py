@@ -71,7 +71,7 @@ try:
 	if params['write-file'] == None:
 		jfutil.out_file(params, report)
 	else:
-		print(report)
+		jfutil.debug(True, report)
 
 except jfexceptions.IncorrectUsageError as err:
 	jfutil.debug(True, "Incorrect usage at argument: {}".format(err.context))
