@@ -1,3 +1,8 @@
+import re
+import json
+import jfutil
+import jfexceptions
+
 def process_params(args):
 	flags = {
 		"u":{"name":"user_name","param":True,"assigned":False},
@@ -111,8 +116,8 @@ def process_params(args):
 					raise jfexceptions.IncorrectUsageError(" ".join(args))
 	
 	# import server name and api_key
-	params = import_conf(params)
+	params = jfutil.import_conf(params)
 	if params['server'] == None or len(params['server']) == 0 or params['key'] == None or len(params['key']) == 0:
-		raise MissingConfigurationError()
+		raise jfexceptions.MissingConfigurationError()
 
 	return params
