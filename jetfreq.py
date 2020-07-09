@@ -62,10 +62,13 @@ try:
 		data = jfnet.get_data_for_modload(params)
 	
 	# calculate the frequencies of each event type
-	events = jfanalyze.analyze(params, data)
-	
-	# format report
-	report = jfutil.format_report(params, events)
+	report = None
+	if params['by_modload'] == True:
+		events = jfanalyze.analyze_by_modload(params, data)
+		report = jfutil.format_report_by_modload(params, events)
+	else:
+		events = jfanalyze.analyze_by_process(params, data)
+		report = jfutil.format_report_by_process(params, events)
 	
 	# dump or write
 	if params['write-file'] == None:
