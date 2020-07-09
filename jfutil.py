@@ -17,7 +17,19 @@ def append_to_report(report, event_freqs, event_type):
 			
 def format_report_by_process(params, event_freqs):
 	report = []
-	report.append(': RESULTS FOR {} {}'.format('MODLOAD' if params['by_modload'] else 'PROCESS', params['search_name'].upper()))
+	
+	# check for no results
+	no_results = True
+	for key in event_freqs:
+		if len(event_freqs[key]) > 0:
+			no_results = False
+			break
+	if no_results = True:
+		report.append(': NO RESULTS FOR PROCESS {}'.format(params['search_name'].upper()))
+		return report
+	
+	# if there are results, add them to the report
+	report.append(': RESULTS FOR PROCESS {}'.format(params['search_name'].upper()))
 	if len(event_freqs['modloads']) > 0:
 		report = append_to_report(report, event_freqs['modloads'], 'MODLOADS')
 	if len(event_freqs['regmods']) > 0:
