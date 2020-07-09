@@ -41,7 +41,7 @@ try:
 	
 	# check that param combinations are valid
 	if params['by_modload']	 == True:
-		if params['regmods'] == True or params['filemods'] == True or params['childprocs'] == True or params['netconns'] == True:
+		if params['regmods'] == True or params['filemods'] == True or params['childprocs'] == True or params['netconns'] == True or params['crossprocs'] == True:
 			flags = ''
 			if params['regmods'] == True:
 				flags += 'r'
@@ -51,6 +51,8 @@ try:
 				flags += 'c'
 			if params['netconns'] == True:
 				flags += 'd'
+			if params['crossprocs'] == True:
+				flags += 'x'
 			raise jfexceptions.FlagsNotApplicableError('by_modload', flags)
 	
 	jfutil.debug(params['verbose'], 'Parameters loaded. Searching for {} {}.'.format('modload' if params['by_modload'] == True else 'process', params['search_name']))
