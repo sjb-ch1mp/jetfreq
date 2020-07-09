@@ -67,11 +67,11 @@ try:
 	# calculate the frequencies of each event type
 	report = None
 	if params['by_modload'] == True:
-		events = jfanalyze.analyze_by_modload(params, data)
-		report = jfutil.format_report_by_modload(params, events)
+		event_freqs = jfanalyze.analyze_by_modload(params, data)
+		report = jfutil.format_report_by_modload(params, event_freqs)
 	else:
-		events = jfanalyze.analyze_by_process(params, data)
-		report = jfutil.format_report_by_process(params, events)
+		event_freqs = jfanalyze.analyze_by_process(params, data)
+		report = jfutil.format_report_by_process(params, event_freqs)
 	
 	# dump or write
 	if params['write-file'] == None:
