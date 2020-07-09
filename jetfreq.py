@@ -69,7 +69,7 @@ try:
 	
 	# dump or write
 	if params['write-file'] == None:
-		jfutil.out_file(report)
+		jfutil.out_file(params, report)
 	else:
 		print(report)
 
