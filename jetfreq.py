@@ -14,17 +14,17 @@ try:
 		jfutil.show_help()
 		exit()
 
-#FIXME : Disabling by_modloads mode during development
+#FIXME : FIXME : Disabling by_modload for the time being : FIXME : FIXME 
 	if params['by_modload'] == True:
 		jfutil.debug(True, "Sorry, the by_modload feature (-m) is still under development")
 		exit()
-#FIXME 
+#FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME
 	
 	jfutil.debug(params['verbose'], 'Parameters parsed as {}'.format(params))
 	
 	# check that param combinations are valid
 	if params['by_modload']	 == True:
-		if params['regmods'] == True or params['filemods'] == True or params['childprocs'] == True or params['netconns'] == True or params['crossprocs'] == True:
+		if params['regmods'] == True or params['filemods'] == True or params['childprocs'] == True or params['netconns'] == True or params['crossprocs']:
 			flags = ''
 			if params['regmods'] == True:
 				flags += 'r'
@@ -38,7 +38,7 @@ try:
 				flags += 'x'
 			raise jfexceptions.FlagsNotApplicableError('by_modload', flags)
 	
-	jfutil.debug(params['verbose'], 'Parameters loaded. Searching for {} {}.'.format('modload' if params['by_modload'] == True else 'process', params['search_name']))
+	jfutil.debug(True, 'Parameters loaded. Searching for {} {}.'.format('modload' if params['by_modload'] == True else 'process', params['search_name']))
 	
 	# get the data for the process or modload	
 	data = None
@@ -48,18 +48,13 @@ try:
 		data = jfnet.get_data_for_modload(params)
 	
 	# calculate the frequencies of each event type
-	report = None
-	if params['by_modload'] == True:
-		event_freqs = jfanalyze.analyze_by_modload(params, data)
-		report = jfutil.format_report_by_modload(params, event_freqs)
-	else:
-		event_freqs = jfanalyze.analyze_by_process(params, data)
-		report = jfutil.format_report_by_process(params, event_freqs)
+	event_freqs = jfanalyze.analyze_by_process(params, data) if params['by_modload'] == False else jfanalyze.analyze_by_modload(params, data)
 	
 	# dump or write
-	if not params['write-file'] == None:
-		jfutil.out_file(params, report)
+	if params['write_file'] == True:
+		file_path = jfutil.out_file_by_process(params, event_freqs) if params['by_modload'] == False else jfutil.out_file_by_modload(params, event_freqs)
 	else:
+		report = jfutil.format_report_by_process(params, event_freqs) if params['by_modload'] == False else jfutil.format_report_by_modload(params, event_freqs)
 		jfutil.debug(True, report)
 
 except jfexceptions.IncorrectUsageError as err:
