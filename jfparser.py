@@ -5,11 +5,12 @@ import jfexceptions
 
 def process_params(args):
 	flags = {
-		"u":{"name":"user_name","param":True,"assigned":False},
+		"U":{"name":"user_name","param":True,"assigned":False},
+		"H":{"name":"host_name","param":True,"assigned":False},
 		"s":{"name":"start_time","param":True,"assigned":False},
-		"w":{"name":"write_file","param":True,"assigned":False},
 		"n":{"name":"sample_size","param":True,"assigned":False},
 		"t":{"name":"threshold","param":True,"assigned":False},
+		"w":{"name":"write_file","param":False,"assigned":False},
 		"v":{"name":"verbose","param":False,"assigned":False},
 		"r":{"name":"regmods","param":False,"assigned":False},
 		"f":{"name":"filemods","param":False,"assigned":False},
@@ -26,8 +27,9 @@ def process_params(args):
 		"search_name":None,
 		"by_modload":False,
 		"user_name":None,
+		"host_name":None,
 		"start_time":"-72h",
-		"write_file":None,
+		"write_file":False,
 		"sample_size":10,
 		"threshold":100,
 		"verbose":False,
@@ -73,7 +75,7 @@ def process_params(args):
 			if len(args[0][1:len(args[0])]) > 1:
 				cluster = args[0][1:len(args[0])]
 				for a in cluster:
-					if flags[a]:
+					if a in flags:
 						if a == 'h':
 							raise jfexceptions.IncorrectUsageError(" ".join(args))
 						elif flags[a]['param'] == True:
@@ -88,7 +90,7 @@ def process_params(args):
 				args = args[1:len(args)]
 			else:
 				a = args[0][1:len(args[0])]
-				if flags[a]:
+				if a in flags:
 					# process flags with params
 					if flags[a]['param'] == True:
 						if len(args) > 1:
