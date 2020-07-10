@@ -13,15 +13,19 @@ def format_query(params):
 		query += "process_name%3A{}%20start%3A{}".format(params['search_name'], params['start_time'])
 		if params['user_name'] != None:
 			query += "%20username%3A{}".format(params['user_name'])
+		if params['host_name'] != None:
+			query += "%20hostname%3A{}".format(params['host_name'])
 	jfutil.debug(params['verbose'], "Query formatted \'{}\'".format(query))
 	return query
 
 def send_query(params, url):
 	try:
-		jfutil.debug(params['verbose'], "Attempting to send query to {} with API Token {}".format(params['server'], params['key']))
+		jfutil.debug(True, "Attempting to send query to {}".format(params['server']))
+		jfutil.debug(params['verbose'], 'Query sent with API Token {}'.format(params['key']))
 		conn = httplib.HTTPSConnection(params['server'], context=ssl._create_unverified_context())
 		conn.request("GET", url, None, headers={'X-Auth-Token':params['key']})
-		jfutil.debug(params['verbose'], "Query successful \'{}\'".format(url))
+		jfutil.debug(True, "Query successful")
+		jfutil.debug(params['verbose'], 'Query URI path is \'{}\''.format(url))
 		return conn.getresponse()
 	except Exception as err:
 		jfutil.debug(True, "Query \'{}\' failed\n{}".format(url, str(err)))
@@ -68,31 +72,31 @@ def get_data_for_process(params):
 
 			if params['filemods'] == True:
 				if 'filemod_complete' in data['process']:
-					event['filemods'] = jutil.get_event_paths(data['process']['filemod_complete'], 2)
+					event['filemods'] = jfutil.get_event_paths(data['process']['filemod_complete'], 2)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no filemods".format(i['process_id']))
 
 			if params['regmods'] == True:
 				if 'regmod_complete' in data['process']:
-					event['regmods'] = jutil.get_event_paths(data['process']['regmod_complete'], 2)
+					event['regmods'] = jfutil.get_event_paths(data['process']['regmod_complete'], 2)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no regmods".format(i['process_id']))
 
 			if params['childprocs'] == True:
 				if 'childproc_complete' in data['process']:
-					event['childprocs'] = jutil.get_event_paths(data['process']['childproc_complete'], 3)
+					event['childprocs'] = jfutil.get_event_paths(data['process']['childproc_complete'], 3)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no childprocs".format(i['process_id']))
 
 			if params['crossprocs'] == True:
 				if 'crossproc_complete' in data['process']:
-					event['crossprocs'] = jutil.get_event_paths(data['process']['crossproc_complete'], 4)
+					event['crossprocs'] = jfutil.get_event_paths(data['process']['crossproc_complete'], 4)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no crossprocs".format(i['process_id']))
 
 			if params['netconns'] == True:
 				if 'netconn_complete' in data['process']:
-					event['netconns'] = jutil.get_event_paths(data['process']['netconn_complete'], 4)
+					event['netconns'] = jfutil.get_event_paths(data['process']['netconn_complete'], 4)
 				else:
 					jfutil.debug(params['verbose'], "Process {} has no netconns".format(i['process_id']))
 			
