@@ -23,21 +23,21 @@ show_help  => 'python jetfreq.py -h'
 
 Parameters:
 
-PARAMETER	    |PRESENCE	|VALUE		  |DEFAULT	|DESCRIPTION
+PARAMETER	|PRESENCE	|VALUE		|DEFAULT	|DESCRIPTION
 ----------------------------------------------------------------------------
-search_name 	|Required	|		        |None		  |The name of the process or modload
--U		        |Optional	|username	  |None		  |Filter results by <username>
--H		        |Optional	|hostname	  |None		  |Filter results by <hostname>
--s		        |Optional	|start_time	|-72h		  |Get all results with a start time >= <start_time>
--n 		        |Optional	|sample_size|20		    |Get first <sample_size> results only
--t		        |Optional	|threshold	|100		  |Show those events that occur in <= <threshold>% processes
-		          |		      |		        |		      |Show those processes that spawn <= <threshold>% modloads
--w 		        |Optional	|		        |False		|Write results to CSV file (Default is to stdout)
--v		        |Optional	|		        |False		|Execute jetfreq.py in debug mode
--r		        |Optional	|		        |False		|Include regmods in results
--f		        |Optional	|		        |False		|Include filemods in results
--c		        |Optional	|		        |False		|Include childprocs in results
--d		        |Optional	|		        |False		|Include netconns in results
--x		        |Optional	|		        |False		|Include crossprocs in results
--m 		        |Optional	|		        |False		|Execute jetfreq.py in by_modload mode
--h		        |Optional	|		        |False		|Show help (this)
+search_name 	|Required	|		|None		|The name of the process or modload
+-U		|Optional	|username	|None		|Filter results by <username>
+-H		|Optional	|hostname	|None		|Filter results by <hostname>
+-s		|Optional	|start_time	|-72h		|Get all results with a start time >= <start_time>
+-n 		|Optional	|sample_size	|20		|Get first <sample_size> results only
+-t		|Optional	|threshold	|100		|Show those events that occur in <= <threshold>% processes
+		|		|		|		|Show those processes that spawn <= <threshold>% modloads
+-w 		|Optional	|		|False		|Write results to CSV file (Default is to stdout)
+-v		|Optional	|		|False		|Execute jetfreq.py in debug mode
+-r		|Optional	|		|False		|Include regmods in results
+-f		|Optional	|		|False		|Include filemods in results
+-c		|Optional	|		|False		|Include childprocs in results
+-d		|Optional	|		|False		|Include netconns in results
+-x		|Optional	|		|False		|Include crossprocs in results
+-m 		|Optional	|		|False		|Execute jetfreq.py in by_modload mode
+-h		|Optional	|		|False		|Show help (this)
