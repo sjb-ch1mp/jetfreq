@@ -9,7 +9,7 @@ class EventFreq():
 		self.perc = perc
 		
 def sort_events(events):
-	for i in len(events):
+	for i in range(len(events)):
 		j = i
 		while j < len(events):
 			if events[i].perc > events[j].perc:
@@ -22,8 +22,8 @@ def sort_events(events):
 def calculate_event_frequency(event_counts, total_processes, threshold):
 	events = []
 	for key in event_counts:
-		perc = round((event_counts[key]/float(total_processes))*100, 4)
-		if perc <= float(threshold):
+		perc = round((event_counts[key]/float(total_processes)), 5)
+		if perc * 100 <= float(threshold):
 			events.append(EventFreq(key, perc))
 	events = sort_events(events)
 	return events
@@ -37,7 +37,7 @@ def count_events(process, container, key):
 	return container
 
 def analyze_by_process(params, data):
-	jfutil.debug(params['verbose'], "Conducting analysis for {}".format(params['search_name']))
+	jfutil.debug(True, "Conducting analysis for {}".format(params['search_name']))
 
 	# do count
 	event_counts = {
@@ -78,25 +78,24 @@ def analyze_by_process(params, data):
 		'netconns':None,
 		'crossprocs':None
 	}
-	for key in event_counts:
-		if len(event_counts['modloads']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of modloads')
-			event_freqs['modloads'] = calculate_event_frequency(event_counts['modloads'], len(data), params['threshold'])
-		if len(event_counts['regmods']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of regmods')
-			event_freqs['regmods'] = calculate_event_frequency(event_counts['regmods'], len(data), params['threshold'])
-		if len(event_counts['childprocs']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of childprocs')
-			event_freqs['childprocs'] = calculate_event_frequency(event_counts['childprocs'], len(data), params['threshold'])
-		if len(event_counts['filemods']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of filemods')
-			event_freqs['filemods'] = calculate_event_frequency(event_counts['filemods'], len(data), params['threshold'])
-		if len(event_counts['netconns']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of netconns')
-			event_freqs['netconns'] = calculate_event_frequency(event_counts['netconns'], len(data), params['threshold'])
-		if len(event_counts['crossprocs']) > 0:
-			jfutil.debug(params['verbose'], 'Calculating freq of crossprocs')
-			event_freqs['crossprocs'] = calculate_event_frequency(event_counts['crossprocs'], len(data), params['threshold'])
+	if len(event_counts['modloads']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of modloads')
+		event_freqs['modloads'] = calculate_event_frequency(event_counts['modloads'], len(data), params['threshold'])
+	if len(event_counts['regmods']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of regmods')
+		event_freqs['regmods'] = calculate_event_frequency(event_counts['regmods'], len(data), params['threshold'])
+	if len(event_counts['childprocs']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of childprocs')
+		event_freqs['childprocs'] = calculate_event_frequency(event_counts['childprocs'], len(data), params['threshold'])
+	if len(event_counts['filemods']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of filemods')
+		event_freqs['filemods'] = calculate_event_frequency(event_counts['filemods'], len(data), params['threshold'])
+	if len(event_counts['netconns']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of netconns')
+		event_freqs['netconns'] = calculate_event_frequency(event_counts['netconns'], len(data), params['threshold'])
+	if len(event_counts['crossprocs']) > 0:
+		jfutil.debug(params['verbose'], 'Calculating freq of crossprocs')
+		event_freqs['crossprocs'] = calculate_event_frequency(event_counts['crossprocs'], len(data), params['threshold'])
 	jfutil.debug(params['verbose'], "Freq calculations complete")
 	
 	return event_freqs
