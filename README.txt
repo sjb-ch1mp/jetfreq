@@ -9,6 +9,12 @@ Author:
 
 sjb-ch1mp
 
+Description:
+
+jetfreq.py uses the Carbon Black Response API to search for all instances of a given process and conduct frequency analysis on its associated
+events (by default modloads only). It can also be run in 'by_modload' mode in which a given modload is searched for and all processes that
+spawn it are returned.
+
 Installation:
 
 1. cd /path/to/desired/location
@@ -17,12 +23,6 @@ Installation:
 5. vim jetfreq.py
 6. [change shebang line to point to the python executable (most likely /usr/bin/python2.7)]
 7. chmod +x jetfreq.py
-
-Description:
-
-jetfreq.py uses the Carbon Black Response API to search for all instances of a given process and conduct frequency analysis on its associated
-events (by default modloads only). It can also be run in 'by_modload' mode in which a given modload is searched for and all processes that
-spawn it are returned.
 
 Usage:
 
