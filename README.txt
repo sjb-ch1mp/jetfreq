@@ -17,12 +17,17 @@ spawn it are returned.
 
 Installation:
 
-1. cd /path/to/desired/location
+1. cd /path/to/install/folder
 2. git clone https://github.com/sjb-ch1mp/jetfreq.git
 3. cd jetfreq
-5. vim jetfreq.py
-6. [change shebang line to point to the python executable (most likely /usr/bin/python2.7)]
-7. chmod +x jetfreq.py
+4. vim jetfreq.py
+	a. Change the shebang line to point to your desired python executable:
+		i. 	'#!/path/to/python'
+5. vim /conf/jetfreq.cfg 
+	a. Change the SERVER and KEY fields to your server hostname and API token
+		i. 	'SERVER=your.server.hostname'
+		ii.	'KEY=your_user_api_token'
+6. chmod +x jetfreq.py
 
 Usage:
 
