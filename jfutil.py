@@ -15,8 +15,9 @@ def debug(verbose, message):
 def append_to_report(report, event_freqs, event_type):
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
+	report.append(':::::: {:^8} | {:^8} | {:^}'.format('Count', 'Freq', 'Path'))
 	for event in event_freqs:
-		report.append(':::::: {:8.4f} | {}'.format(event.perc, event.path))
+		report.append(':::::: {:^8d} | {:^8.4f} | {}'.format(event.count, event.perc, event.path))
 	return report
 			
 def format_report_by_process(params, event_freqs):
@@ -92,31 +93,31 @@ def out_file_by_process(params, event_freqs):
 	# write to file
 	debug(params['verbose'], 'Writing to file {}'.format(file_path))
 	file = open(file_path, 'w')
-	file.write('\'event_type\',\'event\',\'freq\'\n')
+	file.write('\'event_type\',\'event\',\'count\',\'freq\'\n')
 	if not event_freqs['modloads'] == None:
 		events = sort_events(event_freqs['modloads'])
 		for event in events:
-			file.write('\'modload\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'modload\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	if not event_freqs['regmods'] == None:
 		events = sort_events(event_freqs['regmods'])
 		for event in events:
-			file.write('\'regmod\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'regmod\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	if not event_freqs['childprocs'] == None:
 		events = sort_events(event_freqs['childprocs'])
 		for event in events:
-			file.write('\'childproc\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'childproc\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	if not event_freqs['filemods'] == None:
 		events = sort_events(event_freqs['filemods'])
 		for event in events:
-			file.write('\'filemod\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'filemod\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	if not event_freqs['netconns'] == None:
 		events = sort_events(event_freqs['netconns'])
 		for event in events:
-			file.write('\'netconn\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'netconn\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	if not event_freqs['crossprocs'] == None:
 		events = sort_events(event_freqs['crossprocs'])
 		for event in events:
-			file.write('\'crossproc\',\'{}\',\'{}\'\n'.format(event.path, event.perc))
+			file.write('\'crossproc\',\'{}\',\'{}\'\n'.format(event.path, event.count, event.perc))
 	file.close()
 	debug(True, 'Report written to file {}'.format(file_path))
 	return file_path
