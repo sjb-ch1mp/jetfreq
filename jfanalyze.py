@@ -4,9 +4,10 @@ import re
 import json
 
 class EventFreq():
-	def __init__(self, path, perc):
+	def __init__(self, path, perc, count):
 		self.path = path
 		self.perc = perc
+		self.count = count
 		
 def sort_events(events):
 	for i in range(len(events)):
@@ -24,7 +25,7 @@ def calculate_event_frequency(event_counts, total_processes, threshold):
 	for key in event_counts:
 		perc = round((event_counts[key]/float(total_processes)), 5)
 		if perc * 100 <= float(threshold):
-			events.append(EventFreq(key, perc))
+			events.append(EventFreq(key, perc, event_counts[key]))
 	events = sort_events(events)
 	return events
 
