@@ -9,6 +9,15 @@ Author:
 
 sjb-ch1mp
 
+Installation:
+
+1. cd /path/to/desired/location
+2. git clone https://github.com/sjb-ch1mp/jetfreq.git
+3. cd jetfreq
+5. vim jetfreq.py
+6. [change shebang line to point to the python executable (most likely /usr/bin/python2.7)]
+7. chmod +x jetfreq.py
+
 Description:
 
 jetfreq.py uses the Carbon Black Response API to search for all instances of a given process and conduct frequency analysis on its associated
@@ -17,9 +26,9 @@ spawn it are returned.
 
 Usage:
 
-by_process => 'python jetfreq.py <search_name> [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vrfcdxw]'
-by_modload => 'python jetfreq.py <search_name> -m [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
-show_help  => 'python jetfreq.py -h'
+by_process => './jetfreq.py <search_name> [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vrfcdxw]'
+by_modload => './jetfreq.py <search_name> -m [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
+show_help  => './jetfreq.py -h'
 
 Parameters:
 
