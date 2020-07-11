@@ -41,12 +41,6 @@ def process_params(args):
 		"help":False
 	}
 
-	# check caller
-	if args[0] == "jetfreq.py":
-		args = args[1:len(args)]
-	else:
-		raise IncorrectModuleError(args[0])
-
 	# check for no args
 	if len(args) == 0:
 		raise jfexceptions.NoArgsError("jetfreq.py requires arguments")
