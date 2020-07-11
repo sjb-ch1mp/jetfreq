@@ -1,3 +1,5 @@
+#!/path/to/python
+
 import json
 import sys
 import jfexceptions
@@ -7,7 +9,10 @@ import jfanalyze
 import jfparser
 
 try:	
-	params = jfparser.process_params(sys.argv)
+	if __name__ == "__main__":
+		params = jfparser.process_params(sys.argv)
+	else:
+		raise jfexceptions.IncorrectModuleError(__name__)
 	
 	# check for help flag
 	if params['help'] == True:
@@ -61,7 +66,7 @@ except jfexceptions.IncorrectUsageError as err:
 	jfutil.debug(True, "Incorrect usage at argument: {}".format(err.context))
 	jfutil.show_usage()
 except jfexceptions.IncorrectModuleError as err:
-	jfutil.debug(True, "Module {} does not receive arguments".format(err.module))
+	jfutil.debug(True, "{} is the incorrect module".format(err.module))
 except jfexceptions.NoArgsError as err:
 	jfutil.debug(True, err.message)
 	jfutil.show_usage()
