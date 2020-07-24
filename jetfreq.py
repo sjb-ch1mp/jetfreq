@@ -12,61 +12,84 @@ try:
 	if __name__ == "__main__":
 		params = jfparser.process_params(sys.argv)
 	else:
-		raise jfexceptions.IncorrectModuleError(__name__)
+		raise jfexceptions.IncorrectModuleError()
 	
 	# check for help flag
-	if params['help'] == True:
+	if params['mode'] == 'SHOW_HELP':
 		jfutil.show_help()
 		exit()
-
-#FIXME : FIXME : Disabling by_modload for the time being : FIXME : FIXME 
-	if params['by_modload'] == True:
-		jfutil.debug(True, "Sorry, the by_modload feature (-m) is still under development")
-		exit()
-#FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME : FIXME
 	
+	jfutil.debug(params['verbose'], "Running in {} mode".format(params['mode']))	
 	jfutil.debug(params['verbose'], 'Parameters parsed as {}'.format(params))
 	
-	# check that param combinations are valid
-	if params['by_modload']	 == True:
-		if params['regmods'] == True or params['filemods'] == True or params['childprocs'] == True or params['netconns'] == True or params['crossprocs']:
-			flags = ''
-			if params['regmods'] == True:
-				flags += 'r'
-			if params['filemods'] == True:
-				flags += 'f'
-			if params['childprocs'] == True:
-				flags += 'c'
-			if params['netconns'] == True:
-				flags += 'd'
-			if params['crossprocs'] == True:
-				flags += 'x'
-			raise jfexceptions.FlagsNotApplicableError('by_modload', flags)
 	
-	jfutil.debug(True, 'Parameters loaded. Searching for {} {}.'.format('modload' if params['by_modload'] == True else 'process', params['search_name']))
-	
+	banner = ["      _     __  ___            ","     (_)__ / /_/ _/______ ___ _",
+		"    / / -_) __/ _/ __/ -_) _ `/"," __/ /\__/\__/_//_/  \__/\_, /",
+		"|___/                     /_/"]
+	jfutil.debug(True, banner)
+
 	# get the data for the process or modload	
+	representative_sample = None
+	target_sample = None
 	data = None
-	if params['by_modload'] == False:
+	event_freqs = None
+	if params['mode'] == 'BY_PROCESS':
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
 		data = jfnet.get_data_for_process(params)
-	else:
-		data = jfnet.get_data_for_modload(params)
-	
-	# calculate the frequencies of each event type
-	event_freqs = jfanalyze.analyze_by_process(params, data) if params['by_modload'] == False else jfanalyze.analyze_by_modload(params, data)
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		event_freqs = jfanalyze.analyze_by_process(params, data)
+	elif params['mode'] == 'BY_EVENT':
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
+		data = jfnet.get_data_for_event(params)
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		event_freqs = jfanalyze.analyze_by_event(params, data)
+	elif params['mode'] == 'COMPARE_PROCESS':
+		jfutil.debug(True if params['verbose'] == False else False, 'Importing the sample file')
+		representative_sample = jfutil.import_sample(params)
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
+		target_sample = jfnet.get_data_for_process(params)
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		target_sample = jfanalyze.analyze_by_process(params, target_sample)
+		jfutil.debug(True if params['verbose'] == False else False, 'Comparing results to sample file')
+		event_freqs = jfanalyze.compare_process(params, representative_sample, target_sample)
+	elif params['mode'] == 'COMPARE_EVENT':
+		jfutil.debug(True if params['verbose'] == False else False, 'Importing the sample file')
+		representative_sample = jfutil.import_sample(params)
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
+		target_sample = jfnet.get_data_for_event(params)
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		target_sample = jfanalyze.analyze_by_event(params, target_sample)
+		jfutil.debug(True if params['verbose'] == False else False, 'Comparing results to sample file')
+		event_freqs = jfanalyze.compare_event(params, representative_sample, target_sample)
 	
 	# dump or write
 	if params['write_file'] == True:
-		file_path = jfutil.out_file_by_process(params, event_freqs) if params['by_modload'] == False else jfutil.out_file_by_modload(params, event_freqs)
+		file_path = None
+		if params['mode'] == 'BY_PROCESS':
+			file_path = jfutil.out_file_by_process(params, event_freqs)
+		elif params['mode'] == 'BY_EVENT':
+			file_path = jfutil.out_file_by_event(params, event_freqs)
+		elif params['mode'] == 'COMPARE_PROCESS':
+			file_path = jfutil.out_file_compare_process(params, event_freqs)
+		elif params['mode'] == 'COMPARE_EVENT':
+			file_path = jfutil.out_file_compare_event(params, event_freqs)
+		jfutil.debug(True, 'File successfully written to {}'.format(file_path))
 	else:
-		report = jfutil.format_report_by_process(params, event_freqs) if params['by_modload'] == False else jfutil.format_report_by_modload(params, event_freqs)
+		if params['mode'] == 'BY_PROCESS':
+			report = jfutil.format_report_by_process(params, event_freqs)
+		elif params['mode'] == 'BY_EVENT':
+			report = jfutil.format_report_by_event(params, event_freqs)
+		elif params['mode'] == 'COMPARE_PROCESS':
+			report = jfutil.format_report_compare_process(params, event_freqs)
+		elif params['mode'] == 'COMPARE_EVENT':
+			report = jfutil.format_report_compare_event(params, event_freqs)
 		jfutil.debug(True, report)
 
 except jfexceptions.IncorrectUsageError as err:
 	jfutil.debug(True, "Incorrect usage at argument: {}".format(err.context))
 	jfutil.show_usage()
 except jfexceptions.IncorrectModuleError as err:
-	jfutil.debug(True, "{} is the incorrect module".format(err.module))
+	jfutil.debug(True, "Module {} does not receive arguments".format(err.module))
 except jfexceptions.NoArgsError as err:
 	jfutil.debug(True, err.message)
 	jfutil.show_usage()
@@ -90,3 +113,23 @@ except jfexceptions.NoResultsError as err:
 	jfutil.debug(True, "There were no results for query \'{}\'".format(err.query))
 except jfexceptions.NoEventsFoundError as err:
 	jfutil.debug(True, "There were no events found for process returned by query \'{}\'".format(err.query))
+except jfexceptions.ProcessModeMissingEventTypeError as err:
+	jfutil.debug(True, "{} mode requires an event type to be specified".format(err.mode))
+	jfutil.show_usage()
+except jfexceptions.IncorrectUseOfThresholdError as err:
+	jfutil.debug(True, "Threshold parameter requires a comparator to be specified: {}".format(err.threshold))
+	jfutil.show_usage()
+except jfexceptions.IncorrectFlagUsageForModeError as err:
+	jfutil.debug(True, "Mode {} can only take a single event type flag: {}".format(err.mode, err.flags))
+	jfutil.show_usage()
+except jfexceptions.ByEventModeFlagRequiredError as err:
+	jfutil.debug(True, "Mode {} requires an event_type to be specified with an event_type flag, e.g. -m|f|c|d|r".format(err.mode))
+	jfutil.show_usage()
+except jfexceptions.IncorrectSampleForModeError as err:
+	sample_mode = 'BY_EVENT' if err.mode == 'COMPARE_PROCESS' else 'BY_PROCESS'
+	jfutil.debug(True, "The file {} contains data for a {} search, but jetfreq is being run in {} mode.".format(err.file_path, sample_mode, err.mode))
+except jfexceptions.CompareModeMissingSampleFileError as err:
+	jfutil.debug(True, 'Import file must be specified (-i) when running jetfreq in {} mode'.format(err.mode))
+	jfutil.show_usage()
+except jfexceptions.NoDiffsFoundError as err:
+	jfutil.debug(True, 'Target sample ({}) and representative sample ({}) are the same'.format(err.target_event, err.sample))
