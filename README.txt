@@ -16,20 +16,6 @@ events. It can also be run in 'Event Mode' to search for a given event type (e.g
 access it. Running jetfreq.py in 'Compare Mode' allows users to compare a target sample with a representative sample that has been saved in the
 ./samples directory.
 
-Installation:
-
-1. cd /path/to/install/folder
-2. git clone https://github.com/sjb-ch1mp/jetfreq.git
-3. cd jetfreq
-4. vim jetfreq.py
-	a. Change the shebang line to point to your desired python executable:
-		i. 	'#!/path/to/python'
-5. vim /conf/jetfreq.cfg 
-	a. Change the SERVER and KEY fields to your server hostname and API token
-		i. 	'SERVER=your.server.hostname'
-		ii.	'KEY=your_user_api_token'
-6. chmod +x jetfreq.py
-
 Usage:
 
 By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -wv]'
