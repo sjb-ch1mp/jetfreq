@@ -3,13 +3,43 @@ import json
 import jfutil
 import jfexceptions
 
+# Run-the-gauntlet style condition check for parameter combinations
+def check_params(params):
+	# BY_EVENT and COMPARE_EVENT modes do not have event type flags
+	if params['mode'] == 'BY_EVENT' or params['mode'] == 'COMPARE_EVENT':
+		flags = jfutil.get_event_type_flags(params)
+		if len(flags) > 1:
+			raise jfexceptions.IncorrectFlagUsageForModeError(params['mode'], flags)
+		if len(flags) == 0:
+			raise jfexceptions.ByEventModeFlagRequiredError(params['mode'])
+		if 'x' in flags:
+			raise jfexceptions.FlagsNotApplicableError(params['mode'], 'x')
+	
+	# BY_PROCESS and COMPARE_PROCESS modes require at least one event type flag
+	if params['mode'] == 'BY_PROCESS' or params['mode'] == 'COMPARE_PROCESS':
+		if params['regmods'] == False and params['filemods'] == False and params['childprocs'] == False and params['netconns'] == False and params['crossprocs'] == False and params['modloads'] == False:
+			raise jfexceptions.ProcessModeMissingEventTypeError(params['mode'])
+	
+	# COMPARE modes require a representative sample file to be identified
+	if params['import_sample'] == None and (params['mode'] == 'COMPARE_PROCESS' or params['mode'] == 'COMPARE_EVENT'):
+		raise jfexceptions.CompareModeMissingSampleFileError(params['mode'])
+
+	# incompatible flags
+	if re.match(r'COMPARE_', params['mode']) == None and not params['import_sample'] == None:
+		raise jfexceptions.FlagsNotApplicableError(params['mode'], 'i')
+
+	return params
+
+# Import sys.argv[] and convert it into a JSON holding all parameters
 def process_params(args):
 	flags = {
-		"U":{"name":"user_name","param":True,"assigned":False},
-		"H":{"name":"host_name","param":True,"assigned":False},
+		"u":{"name":"user_name","param":True,"assigned":False},
+		"h":{"name":"host_name","param":True,"assigned":False},
 		"s":{"name":"start_time","param":True,"assigned":False},
+		"e":{"name":"end_time","params":True,"assigned":False},
 		"n":{"name":"sample_size","param":True,"assigned":False},
 		"t":{"name":"threshold","param":True,"assigned":False},
+		"i":{"name":"import_sample","param":True,"assigned":False},
 		"w":{"name":"write_file","param":False,"assigned":False},
 		"v":{"name":"verbose","param":False,"assigned":False},
 		"r":{"name":"regmods","param":False,"assigned":False},
@@ -17,41 +47,55 @@ def process_params(args):
 		"c":{"name":"childprocs","param":False,"assigned":False},
 		"d":{"name":"netconns","param":False,"assigned":False},
 		"x":{"name":"crossprocs","param":False,"assigned":False},
-		"m":{"name":"by_modload","param":False,"assigned":False},
-		"h":{"name":"help","param":False,"assigned":False}
+		"m":{"name":"modloads","param":False,"assigned":False},
+		"by-process":{"name":"BY_PROCESS","param":False,"assigned":False},
+		"by-event":{"name":"BY_EVENT","param":False,"assigned":False},
+		"help":{"name":"SHOW_HELP","param":False,"assigned":False},
+		"compare-process":{"name":"COMPARE_PROCESS","param":False,"assigned":False},
+		"compare-event":{"name":"COMPARE_EVENT","param":False,"assigned":False}
 	}
 
 	params = {
 		"server":None,
 		"key":None,
 		"search_name":None,
-		"by_modload":False,
+		"mode":'BY_PROCESS',
 		"user_name":None,
 		"host_name":None,
+		"import_sample":None,
 		"start_time":"-72h",
 		"write_file":False,
 		"sample_size":10,
-		"threshold":100,
+		"threshold":"100",
 		"verbose":False,
 		"regmods":False,
 		"filemods":False,
 		"childprocs":False,
 		"netconns":False,
 		"crossprocs":False,
-		"help":False
+		"modloads":False
 	}
+	
+	# remove module argument
+	args = args[1:len(args)]
 
 	# check for no args
 	if len(args) == 0:
 		raise jfexceptions.NoArgsError("jetfreq.py requires arguments")
 
-	# check for help flag
-	if args[0] == "-h":
-		if len(args) > 1:
-			raise jfexceptions.IncorrectUsageError(" ".join(args))
+	# check for mode flag
+	if args[0].startswith('--'):	
+		a = args[0][2:len(args[0])]
+		if a in flags:
+			params["mode"] = flags[a]['name']
+			if params["mode"] == "SHOW_HELP":
+				return params
+			else:
+				args = args[1:len(args)]
 		else:
-			params["help"] = True
-			return params
+			raise jfexceptions.IncorrectUsageError(" ".join(args))
+	else:
+		params["mode"] == flags["by-process"]['name']
 
 	# get search name
 	if args[0].startswith('-'):
@@ -115,5 +159,5 @@ def process_params(args):
 	params = jfutil.import_conf(params)
 	if params['server'] == None or len(params['server']) == 0 or params['key'] == None or len(params['key']) == 0:
 		raise jfexceptions.MissingConfigurationError()
-
-	return params
+	
+	return check_params(params)	
