@@ -12,8 +12,9 @@ sjb-ch1mp
 Description:
 
 jetfreq.py uses the Carbon Black Response API to search for all instances of a given process and conduct frequency analysis on its associated
-events (by default modloads only). It can also be run in 'by_modload' mode in which a given modload is searched for and all processes that
-spawn it are returned.
+events. It can also be run in 'Event Mode' to search for a given event type (e.g. modload, regmod) and conduct frequency analysis on the processes that
+access it. Running jetfreq.py in 'Compare Mode' allows users to compare a target sample with a representative sample that has been saved in the
+./samples directory.
 
 Installation:
 
@@ -31,27 +32,45 @@ Installation:
 
 Usage:
 
-by_process => './jetfreq.py <search_name> [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vrfcdxw]'
-by_modload => './jetfreq.py <search_name> -m [-U <username> -H <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
-show_help  => './jetfreq.py -h'
+By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -wv]'
+By Event Mode : './jetfreq.py --by-event <search_name> -m|r|f|c|d [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
+Compare Processes : './jetfreq.py --compare-process <search_name> -i <sample_file> -m|r|f|c|d|x [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -wv]'
+Compare Events : './jetfreq.py --compare-event <search_name> -i <sample_file> -m|r|f|c|d [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
+Show Help : './jetfreq.py --help'
 
 Parameters:
 
-PARAMETER	|PRESENCE	|VALUE		|DEFAULT	|DESCRIPTION
-----------------------------------------------------------------------------
-search_name 	|Required	|		|None		|The name of the process or modload
--U		|Optional	|username	|None		|Filter results by <username>
--H		|Optional	|hostname	|None		|Filter results by <hostname>
--s		|Optional	|start_time	|-72h		|Get all results with a start time >= <start_time>
--n 		|Optional	|sample_size	|20		|Get first <sample_size> results only
--t		|Optional	|threshold	|100		|Show those events that occur in <= <threshold>% processes
-		|		|		|		|Show those processes that spawn <= <threshold>% modloads
--w 		|Optional	|		|False		|Write results to CSV file (Default is to stdout)
--v		|Optional	|		|False		|Execute jetfreq.py in debug mode
--r		|Optional	|		|False		|Include regmods in results
--f		|Optional	|		|False		|Include filemods in results
--c		|Optional	|		|False		|Include childprocs in results
--d		|Optional	|		|False		|Include netconns in results
--x		|Optional	|		|False		|Include crossprocs in results
--m 		|Optional	|		|False		|Execute jetfreq.py in by_modload mode
--h		|Optional	|		|False		|Show help (this)
+:: Mandatory
+search_name : The name of the process or modload
+
+:: Modes
+--by-process : Search for given process (default mode).
+--by-event : Search for a given event, e.g. modload, regmod, netconn
+--compare-process : Compare a representative by-process sample with a target by-process sample
+--compare-event : Compare a representative by-event sample with a target by-event sample
+--help : Show help (this)
+
+:: With Value
+-u : Filter results by <username>
+-h : Filter results by <hostname>
+-s : Get all results with a start time >= <s> (default = '-72h')
+-n : Get first <n> results only (default = '20')
+-t : Include events that occur in >= <t> processes (default = '100')
+-i : Import <sample_file> to compare to target sample
+
+:: Boolean
+-w : Write results to CSV file (./samples)
+-v : Verbose
+-r : Include regmods in results (--by-process) | Search for regmod (--by-event)
+-f : Include filemods in results (--by-process) | Search for filemod (--by-event)
+-c : Include childprocs in results (--by-process) | Search for childproc (--by-event)
+-d : Include netconns in results (--by-process) | Search for netconn (--by-event)
+-x : Include crossprocs in results (--by-process only)
+-m : Include modloads in results (--by-process) | Search for modload (--by-event)
+
+File name syntax:
+
+--by-process : ./samples/process/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>].csv
+--by-event : ./samples/event/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>].csv
+--compare-process : ./samples/process/diff/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
+--compare-event : ./samples/event/diff/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
