@@ -7,7 +7,7 @@ ___  /  \___/\__/ /_/    /_/    \___/\__, /
 
 Author: 
 
-sjb-ch1mp
+Samuel.Brookes@aph.gov.au
 
 Description:
 
@@ -18,10 +18,10 @@ access it. Running jetfreq.py in 'Compare Mode' allows users to compare a target
 
 Usage:
 
-By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -wv]'
-By Event Mode : './jetfreq.py --by-event <search_name> -m|r|f|c|d [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
-Compare Processes : './jetfreq.py --compare-process <search_name> -i <sample_file> -m|r|f|c|d|x [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -wv]'
-Compare Events : './jetfreq.py --compare-event <search_name> -i <sample_file> -m|r|f|c|d [-u <username> -h <hostname> -s <start_time> -n <sample_size> -t <threshold> -vw]'
+By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wv]'
+By Event Mode : './jetfreq.py --by-event -m|r|f|c|d <search_name> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vw]'
+Compare Processes : './jetfreq.py --compare-process <search_name> -i <sample_file> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wv]'
+Compare Events : './jetfreq.py --compare-event -m|r|f|c|d <search_name> -i <sample_file> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vw]'
 Show Help : './jetfreq.py --help'
 
 Parameters:
@@ -38,10 +38,13 @@ search_name : The name of the process or modload
 
 :: With Value
 -u : Filter results by <username>
+-U : Exclude all results from <username>
 -h : Filter results by <hostname>
--s : Get all results with a start time >= <s> (default = '-72h')
--n : Get first <n> results only (default = '20')
--t : Include events that occur in >= <t> processes (default = '100')
+-H : Exclude all results from <hostname>
+-s : Get all results with a start time >= <s> (default = '-672h')
+-n : Get first <n> results only (default = '50')
+-t : Include events that occur in <= <threshold>% processes (default = '100')
+-T : Include events that occur in >= <threshold>% processes (default = '0')
 -i : Import <sample_file> to compare to target sample
 
 :: Boolean
@@ -56,7 +59,7 @@ search_name : The name of the process or modload
 
 File name syntax:
 
---by-process : ./samples/process/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>].csv
---by-event : ./samples/event/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>].csv
---compare-process : ./samples/process/diff/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
---compare-event : ./samples/event/diff/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
+--by-process : ./samples/process/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<upper_threshold>_T-<lower_threshold>[_u-<username>_h-<hostname>].csv
+--by-event : ./samples/event/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<upper_threshold>_T-<lower_threshold>[_u-<username>_h-<hostname>].csv
+--compare-process : ./samples/process/diff/<datetime>_s-<search-name>_e-<event-types>_n-<sample-size>_t-<upper_threshold>_T-<lower_threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
+--compare-event : ./samples/event/diff/<datetime>_s-<search-name>_e-<event-type>_n-<sample-size>_t-<upper_threshold>_T-<lower_threshold>[_u-<username>_h-<hostname>]_i-<sample-file-datetime>.csv
