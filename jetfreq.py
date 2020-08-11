@@ -8,27 +8,31 @@ import jfnet
 import jfanalyze
 import jfparser
 
+# MAIN METHOD FOR JETFREQ.PY
 try:	
+	# IMPORT THE ARGUMENTS FROM COMMAND LINE AND LOAD
+	# AND LOAD THEM INTO A JSON OF PARAMETERS
+	# THAT CAN BE EASILY PASSED BETWEEN FUNCTIONS
 	if __name__ == "__main__":
 		params = jfparser.process_params(sys.argv)
-	else:
-		raise jfexceptions.IncorrectModuleError()
 	
-	# check for help flag
+	# CHECK IF JETFREQ IS RUNNING IN HELP MODE
+	# IF SO, SHOW HELP AND EXIT
 	if params['mode'] == 'SHOW_HELP':
 		jfutil.show_help()
 		exit()
 	
+	# DEBUG INFO
 	jfutil.debug(params['verbose'], "Running in {} mode".format(params['mode']))	
 	jfutil.debug(params['verbose'], 'Parameters parsed as {}'.format(params))
 	
-	
+	# SHOW THE JETFREQ BANNER
 	banner = ["      _     __  ___            ","     (_)__ / /_/ _/______ ___ _",
 		"    / / -_) __/ _/ __/ -_) _ `/"," __/ /\__/\__/_//_/  \__/\_, /",
 		"|___/                     /_/"]
 	jfutil.debug(True, banner)
-
-	# get the data for the process or modload	
+	
+	# GET DATA FOR EVENT OR PROCESS FROM CBR SERVER AND ANALYZE IT 
 	representative_sample = None
 	target_sample = None
 	data = None
@@ -44,25 +48,25 @@ try:
 		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
 		event_freqs = jfanalyze.analyze_by_event(params, data)
 	elif params['mode'] == 'COMPARE_PROCESS':
-		jfutil.debug(True if params['verbose'] == False else False, 'Importing the sample file')
+		jfutil.debug(True if params['verbose'] == False else False, 'Importing the representative sample')
 		representative_sample = jfutil.import_sample(params)
-		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching the target sample from {}'.format(params['server']))
 		target_sample = jfnet.get_data_for_process(params)
-		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the target sample')
 		target_sample = jfanalyze.analyze_by_process(params, target_sample)
-		jfutil.debug(True if params['verbose'] == False else False, 'Comparing results to sample file')
+		jfutil.debug(True if params['verbose'] == False else False, 'Comparing target sample to representative sample')
 		event_freqs = jfanalyze.compare_process(params, representative_sample, target_sample)
 	elif params['mode'] == 'COMPARE_EVENT':
-		jfutil.debug(True if params['verbose'] == False else False, 'Importing the sample file')
+		jfutil.debug(True if params['verbose'] == False else False, 'Importing the representative sample')
 		representative_sample = jfutil.import_sample(params)
-		jfutil.debug(True if params['verbose'] == False else False, 'Fetching data from {}'.format(params['server']))
+		jfutil.debug(True if params['verbose'] == False else False, 'Fetching the target sample from {}'.format(params['server']))
 		target_sample = jfnet.get_data_for_event(params)
-		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the search results')
+		jfutil.debug(True if params['verbose'] == False else False, 'Analyzing the target sample')
 		target_sample = jfanalyze.analyze_by_event(params, target_sample)
-		jfutil.debug(True if params['verbose'] == False else False, 'Comparing results to sample file')
+		jfutil.debug(True if params['verbose'] == False else False, 'Comparing target sample to representative sample')
 		event_freqs = jfanalyze.compare_event(params, representative_sample, target_sample)
 	
-	# dump or write
+	# WRITE RESULTS TO FILE OR DUMP REPORT TO STDOUT
 	if params['write_file'] == True:
 		file_path = None
 		if params['mode'] == 'BY_PROCESS':
@@ -85,11 +89,10 @@ try:
 			report = jfutil.format_report_compare_event(params, event_freqs)
 		jfutil.debug(True, report)
 
+# CATCH DEFINED ERRORS TO PROVIDE DEBUG INFORMATION
 except jfexceptions.IncorrectUsageError as err:
 	jfutil.debug(True, "Incorrect usage at argument: {}".format(err.context))
 	jfutil.show_usage()
-except jfexceptions.IncorrectModuleError as err:
-	jfutil.debug(True, "Module {} does not receive arguments".format(err.module))
 except jfexceptions.NoArgsError as err:
 	jfutil.debug(True, err.message)
 	jfutil.show_usage()
@@ -133,3 +136,5 @@ except jfexceptions.CompareModeMissingSampleFileError as err:
 	jfutil.show_usage()
 except jfexceptions.NoDiffsFoundError as err:
 	jfutil.debug(True, 'Target sample ({}) and representative sample ({}) are the same'.format(err.target_event, err.sample))
+except jfexceptions.NonsensicalThresholdValuesError as err:
+	jfutil.debug(True, 'Greater Than Threshold value ({}) is equal to Less Than Threshold value ({}). This will return zero results.'.format(err.greater_than, err.less_than))
