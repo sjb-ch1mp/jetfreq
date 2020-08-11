@@ -1,3 +1,6 @@
+# THIS MODULE CONTAINS VARIOUS UTILITY FUNCTIONS USED
+# BY ALL OTHER MODULES IN JETFREQ
+
 import re
 import jfexceptions
 import os
@@ -7,6 +10,7 @@ from jfanalyze import EventDiff
 from jfanalyze import DiffType
 from datetime import datetime
 
+# THIS FUNCTION FORMATS AND WRITES DEBUG INFORMATION TO STDOUT
 def debug(verbose, message):
 	if verbose:
 		if type(message) == list:
@@ -15,6 +19,8 @@ def debug(verbose, message):
 		else:
 			print("jetfreq.py: {}".format(message))
 
+# THIS FUNCTION SORT A LIST OF EVENT_DIFF OBJECTS 
+# ALPHABETICALLY BY THEIR DIFFTYPE VALUE
 def sort_event_diffs_by_type(event_diffs):
 	for i in range(len(event_diffs)):
 		j = i + 1
@@ -26,13 +32,14 @@ def sort_event_diffs_by_type(event_diffs):
 			j = j + 1
 	return event_diffs
 
+# THIS FUNCTION FORMATS THE CONTENTS OF EVENT_DIFF OBJECTS
+# AND APPENDS IT TO THE REPORT LIST 
 def append_diff_to_report(report, event_diffs, event_type):
 	dt = DiffType()
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
 
 	event_diffs = sort_event_diffs_by_type(event_diffs)
-
 	for diff in event_diffs:
 		if diff.difftype == dt.MISS_FM_REP:
 			report.append(':::::: {} | {}'.format(diff.difftype, diff.target_event.path))
@@ -48,41 +55,55 @@ def append_diff_to_report(report, event_diffs, event_type):
 			report.append(':::::: {} | {}'.format(diff.difftype, diff.target_event.path))
 	return report
 
+# THIS FUNCTION FORMATS THE CONTENTS OF EVENT_FREQ OBJECTS
+# AND APPENDS IT TO THE REPORT LIST
 def append_to_report(report, event_freqs, event_type):
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
 	for event in event_freqs:
 		report.append(':::::: {}/{} | {:8.4f} | {}'.format(event.count, event.total, event.perc, event.path))
 	return report
-			
+
+# THIS IS THE MAIN FUNCTION FOR FORMATTING THE RESULTS
+# OF A --BY-PROCESS MODE QUERY INTO A REPORT
 def format_report_by_process(params, event_freqs):
 
 	debug(params['verbose'], 'Generating report')
 	report = []
 	
-	# check for no results
+	# CHECK THAT THERE ARE, IN FACT, RESULTS TO REPORT
 	no_results = True
 	for key in event_freqs:
 		if not event_freqs[key] == None and len(event_freqs[key]) > 0:
 			no_results = False
 			break
+	# OTHERWISE, YOU SHALL NOT PASS
 	if no_results == True:
 		report.append('::::::')
 		report.append(':::::: NO RESULTS FOR PROCESS {}'.format(params['search_name'].upper()))
 		return report
 	
-	# if there are results, add them to the report
+	# APPEND THE REPORT HEADERS TO THE REPORT
 	report.append('::::::')
 	report.append(':::::: RESULTS FOR PROCESS {}'.format(params['search_name'].upper()))
 	report.append('::::::')
 	report.append(':::::: FILTERS')
 	report.append(':::::: start_time = {}'.format(params['start_time']))
-	report.append(':::::: threshold = {}%'.format(params['threshold']))
+	if params['threshold_lt'] != None:
+		report.append(':::::: threshold (less than) = {}%'.format(params['threshold_lt']))
+	if params['threshold_gt'] != None:
+		report.append(':::::: threshold (greater than) = {}%'.format(params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(params['sample_size']))
 	if not params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(params['user_name']))
+	elif not params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(params['exclude_user']))
 	if not params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(params['host_name']))
+	elif not params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
+
+	# APPEND THE EVENTS TO THE REPORT
 	if not event_freqs['modloads'] == None and len(event_freqs['modloads']) > 0:
 		report = append_to_report(report, event_freqs['modloads'], 'MODLOADS')
 	if not event_freqs['regmods'] == None and len(event_freqs['regmods']) > 0:
@@ -95,15 +116,20 @@ def format_report_by_process(params, event_freqs):
 		report = append_to_report(report, event_freqs['netconns'], 'NETCONNS')
 	if not event_freqs['crossprocs'] == None and len(event_freqs['crossprocs']) > 0:
 		report = append_to_report(report, event_freqs['crossprocs'], 'CROSSPROCS')
+
+	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
 	report.append(':::::: END')
 	return report
 
+# THIS IS THE MAIN FUNCTION FOR FORMATTING THE RESULTS OF A 
+# --BY-EVENT QUERY INTO A REPORT
 def format_report_by_event(params, event_freqs):
 	
 	debug(params['verbose'], 'Generating report')	
 	report = []
 	
+	# GET THE EVENT TYPE THAT WAS IN THE QUERY
 	event_type = get_event_type_flags(params)	
 	if event_type == 'm':
 		event_type = 'MODLOAD'
@@ -116,30 +142,45 @@ def format_report_by_event(params, event_freqs):
 	elif event_type == 'd':
 		event_type = 'NETCONN'
 
-	# check for no results
-	# event_freq = [{path:<process_path>,perc:<perc>,count:<count>,total:<total>}]
+	# IF THERE ARE NO RESULTS, GO NO FURTHER
 	if len(event_freqs) == 0:
 		report.append('::::::')
 		report.append(':::::: NO RESULTS FOR {} {}'.format(event_type, params['search_name'].upper()))
 		return report
 	
+	# APPEND THE REPORT HEADERS TO THE REPORT
 	report.append('::::::')
 	report.append(':::::: RESULTS FOR {} {}'.format(event_type, params['search_name'].upper()))
 	report.append('::::::')
 	report.append(':::::: FILTERS')
 	report.append(':::::: start_time = {}'.format(params['start_time']))
-	report.append(':::::: threshold = {}%'.format(params['threshold']))
+	if params['threshold_lt'] != None:
+		report.append(':::::: threshold (less than) = {}%'.format(params['threshold_lt']))
+	if params['threshold_gt'] != None:
+		report.append(':::::: threshold (greater than) = {}%'.format(params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(params['sample_size']))
 	if not params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(params['user_name']))
+	elif not params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(params['exclude_user']))
 	if not params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(params['host_name']))
+	elif not params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
+
+	# APPEND THE PROCESSES TO THE REPORT
 	report = append_to_report(report, event_freqs, 'PROCESSES')
+
+	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
 	report.append(':::::: END')
 	return report
 
+# THIS FUNCTION TAKES A FILE NAME AND USES IT TO 
+# CREATE A PARAMS JSON CONTAINER TO HOLD THE PARAMETERS
+# USED IN THE SEARCH THAT GENERATED THE FILE
 def get_params_from_file_name(file_name):
+	# INITIALIZE JSON CONTAINER FOR PARAMETERS
 	params = {
 		'search_name':None,
 		'regmods':False,
@@ -150,15 +191,20 @@ def get_params_from_file_name(file_name):
 		'netconns':False,
 		'sample_size':10,
 		'user_name':None,
+		'exclude_user':None,
 		'host_name':None,
-		'threshold':100,
+		'exclude_host':None,
+		'threshold_lt':100,
+		'threshold_gt':0,
 		'event_type':None
 		}
 
-	name_ary = re.split(r'_[hutnse]{1}-', file_name[0:len(file_name) - 4]) # trim .csv
-	params['search_name'] = name_ary[1]
+	# SPLIT THE NAME AT THE DEFINED FLAGS, INTO AN ARRAY
+	name_ary = re.split(r'_[hHuUtTnse]{1}-', file_name[0:len(file_name) - 4]) # trim .csv
+	params['search_name'] = name_ary[1].replace('__BS__', '\\')
 	params['sample_size'] = int(name_ary[3])
-	params['threshold'] = int(name_ary[4])
+	params['threshold_lt'] = int(name_ary[4]) if not name_ary[4] == "None" else "None"
+	params['threshold_gt'] = int(name_ary[5]) if not name_ary[5] == "None" else "None"
 	flags = name_ary[2]
 	if 'r' in flags:
 		params['regmods'] = True
@@ -178,69 +224,106 @@ def get_params_from_file_name(file_name):
 	if 'd' in flags:
 		params['netconns'] = True
 		params['event_type'] = 'NETCONN'
-	if len(name_ary) == 7: # both username and hostname
-		params['user_name'] = name_ary[5]
-		params['host_name'] = name_ary[6]
-	elif len(name_ary) == 6: # either username or hostname
-		if re.match(r'_h-', file_name) == None:
-			params['user_name'] = name_ary[5]
-		else:
-			params['host_name'] = name_ary[5]
+	# IF THERE ARE 8 ELEMENTS IN THE NAME_ARY, THEN A USER FLAG AND A HOST FLAG WAS USED
+	if len(name_ary) == 8:
+		if '_u-' in file_name:
+			params['user_name'] = name_ary[6]
+		elif '_U-' in file_name:
+			params['exclude_user'] = name_ary[6]
+		if '_h-' in file_name:
+			params['host_name'] = name_ary[7]
+		elif '_H-' in file_name:
+			params['exclude_host'] = name_ary[7]
+	# IF THERE ARE 7 ELEMENTS IN THE NAME_ARY, THEN EITHER A USER FLAG OR A HOST FLAG WAS USED
+	elif len(name_ary) == 7:
+		if '_h-' in file_name:
+			params['host_name'] = name_ary[6]
+		elif '_H-' in file_name:
+			params['exclude_host'] = name_ary[6]
+		elif '_u-' in file_name:
+			params['user_name'] = name_ary[6]
+		elif '_U-' in file_name:
+			params['exclude_user'] = name_ary[6]
 	return params
 
+# THIS IS THE MAIN FUNCTION FOR FORMATTING THE RESULTS OF A 
+# --COMPARE-PROCESS MODE QUERY INTO A REPORT
 def format_report_compare_process(params, event_freqs):
 	report = []
 	
-	# check no results
+	# CHECK THAT THERE ARE INDEED RESULTS
 	no_results = True
 	for key in event_freqs:
 		if not event_freqs[key] == None and len(event_freqs[key]) > 0:
 			no_results = False
 			break
+	# IF NOT, GO NO FURTHER
 	if no_results:
 		report.append('::::::')
 		report.append(':::::: TARGET AND REPRESENTATIVE SAMPLES ARE THE SAME')
 		return report
 	
-	# if there are results, add them to the report
+	# EXTRACT THE PARAMETERS USED TO GENERATE THE REPRESENTATIVE SAMPLE FROM ITS FILE NAME
 	representative_sample_params = get_params_from_file_name(params['import_sample'])
+
+	# APPEND THE REPORT HEADERS TO THE REPORT
 	report.append('::::::')
 	report.append(':::::: PROCESS COMPARISON RESULTS')
 	report.append('::::::')
 	report.append(':::::: REPRESENTATIVE SAMPLE PROCESS {}'.format(representative_sample_params['search_name'].upper()))
-	report.append(':::::: file = {}'.format(params['import_sample']))
-	report.append(':::::: threshold = {}%'.format(representative_sample_params['threshold']))
+	report.append(':::::: file = {}'.format(params['import_sample'].replace('__BS__', '\\')))
+	if representative_sample_params['threshold_lt'] != None:
+		report.append(':::::: threshold (less than) = {}%'.format(representative_sample_params['threshold_lt']))
+	if representative_sample_params['threshold_gt'] != None:
+		report.append(':::::: threshold (greather than) = {}%'.format(representative_sample_params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(representative_sample_params['sample_size']))
 	if not representative_sample_params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(representative_sample_params['user_name']))
+	elif not representative_sample_params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(representative_sample_params['exclude_user']))
 	if not representative_sample_params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(representative_sample_params['host_name']))
+	elif not representative_sample_params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(representative_sample_params['exclude_host']))
 	report.append('::::::')
 	report.append(':::::: TARGET SAMPLE PROCESS {}'.format(params['search_name'].upper()))
 	report.append(':::::: start_time = {}'.format(params['start_time']))
-	report.append(':::::: threshold = {}%'.format(params['threshold']))
+	if params['threshold_lt'] != None:
+		report.append(':::::: threshold (less than) = {}%'.format(params['threshold_lt']))
+	if params['threshold_gt'] != None:
+		report.append(':::::: threshold (greater than) = {}%'.format(params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(params['sample_size']))
 	if not params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(params['user_name']))
+	elif not params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(params['exclude_user']))
 	if not params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(params['host_name']))
+	elif not params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
+
+	# APPEND THE EVENT DIFFERENCES TO THE REPORT
 	for key in event_freqs:
 		if not event_freqs[key] == None and len(event_freqs[key]) > 0:
 			report = append_diff_to_report(report, event_freqs[key], key.upper())
+
+	# CLOSE AND RETURN REPORT
 	report.append('::::::')
 	report.append(':::::: END')
 	return report
 
+# THIS IS THE MAIN FUNCTION FOR FORMATTING THE RESULTS
+# OF A --COMPARE-EVENT QUERY INTO A REPORT
 def format_report_compare_event(params, event_freqs):
 	report = []
 	
-	# check no results
+	# IF THERE ARE NO RESULTS, GO NO FURTHER
 	if len(event_freqs) == 0:
 		report.append('::::::')
 		report.append(':::::: TARGET AND REPRESENTATIVE SAMPLES ARE THE SAME')
 		return report
 	
-	# get target event type
+	# GET THE EVENT TYPE USED IN THE TARGET SAMPLE
 	event_type = 'NETCONN'
 	if params['modloads'] == True:
 		event_type = 'MODLOAD'
@@ -251,32 +334,51 @@ def format_report_compare_event(params, event_freqs):
 	elif params['childprocs'] == True:
 		event_type = 'CHILDPROC'
 	
+	# EXTRACT THE PARAMETERS USED TO GENERATE THE REPRESENTATIVE SAMPLE FROM THE FILE NAME
 	representative_sample_params = get_params_from_file_name(params['import_sample'])
+
+	# APPEND THE REPORT HEADERS TO THE REPORT
 	report.append('::::::')
 	report.append(':::::: EVENT COMPARISON RESULTS')
 	report.append('::::::')
 	report.append(':::::: REPRESENTATIVE SAMPLE {} {}'.format(representative_sample_params['event_type'], representative_sample_params['search_name'].upper()))
-	report.append(':::::: file = {}'.format(params['import_sample']))
-	report.append(':::::: threshold = {}'.format(representative_sample_params['threshold']))
+	report.append(':::::: file = {}'.format(params['import_sample'].replace('__BS__', '\\')))
+	report.append(':::::: threshold (less than) = {}'.format(representative_sample_params['threshold_lt']))
+	report.append(':::::: threshold (greater than) = {}'.format(representative_sample_params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(representative_sample_params['sample_size']))
 	if not representative_sample_params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(representative_sample_params['user_name']))
+	elif not representative_sample_params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(representative_sample_params['exclude_user']))
 	if not representative_sample_params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(representative_sample_params['host_name']))
+	elif not representative_sample_params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(representative_sample_params['exclude_host']))
 	report.append('::::::')
-	report.append(':::::: TARGET SAMPLE {} {}'.format(event_type, params['search_name']))
+	report.append(':::::: TARGET SAMPLE {} {}'.format(event_type, params['search_name'].upper()))
 	report.append(':::::: start_time = {}'.format(params['start_time']))
-	report.append(':::::: threshold = {}'.format(params['threshold']))
+	report.append(':::::: threshold (less than) = {}'.format(params['threshold_lt']))
+	report.append(':::::: threshold (greater than) = {}'.format(params['threshold_gt']))
 	report.append(':::::: sample_size = {}'.format(params['sample_size']))
 	if not params['user_name'] == None:
 		report.append(':::::: user_name = {}'.format(params['user_name']))
+	elif not params['exclude_user'] == None:
+		report.append(':::::: exclude_user = {}'.format(params['exclude_user']))
 	if not params['host_name'] == None:
 		report.append(':::::: host_name = {}'.format(params['host_name']))
+	elif not params['exclude_host'] == None:
+		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
+
+	# APPEND THE PROCESS DIFFERENCES TO THE REPORT
 	report = append_diff_to_report(report, event_freqs, 'PROCESSES')
+
+	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
 	report.append(':::::: END')
 	return report
 
+# THIS FUNCTION EXTRACTS THE EVENT TYPE FLAGS
+# FROM PARAMS AND RETURN THEM IN A STRING
 def get_event_type_flags(params):
 	flags = ""
 	if params['modloads'] == True:
@@ -293,7 +395,10 @@ def get_event_type_flags(params):
 		flags += 'd'
 	return flags
 
+# THIS FUNCTION IMPORTS THE CONTENTS OF A SAMPLE FILE
+# AND RETURNS THEM AS A LIST OR DICTIONARY OF EVENT_FREQ OBJECTS
 def import_sample(params):
+	# INITIALIZE THE COLUMN INDEX VARIABLES
 	search_name = None
 	event_type = None
 	path = None
@@ -301,17 +406,17 @@ def import_sample(params):
 	total = None
 	freq = None
 	
+	# CHECK THAT THE USER HASN'T ACCIDENTALLY COPIED DIRECTORY SECTIONS INTO THE FILEPATH
 	file_path = ''
-	# check for folder and prepend if not already included
-	if re.match(r'^\./samples/', params['import_sample']) == None:
-		file_path = './samples/{}/{}'.format('process' if params['mode'] == 'COMPARE_PROCESS' else 'event', params['import_sample'])
-	elif not re.match(r'/', params['import_sample']) == None:
-		file_path_ary = params['import_sample'].split('/')
-		file_path = './samples/{}/{}'.format('process' if params['mode'] == 'COMPARE_PROCESS' else 'event', file_path_ary[len(file_path_ary) - 1])
-	else:
-		file_path = params['import_sample']
+	if '/' in params['import_sample']:
+		hold = params['import_sample'].split('/')
+		params['import_sample'] = hold[len(hold) - 1]
+
+	# FORMAT THE IMPORT_SAMPLE VALUE AS A FILE PATH
+	file_path = './samples/{}/{}'.format('process' if params['mode'] == 'COMPARE_PROCESS' else 'event', params['import_sample'])
 	
-	# get the column indices for the compare mode
+	# THE COLUMN IN THE .CSV FILE DIFFERS DEPENDING UPON WHETHER THE 
+	# FILE IS THE RESULT OF A PROCESS OR EVENT SEARCH
 	if params['mode'] == 'COMPARE_PROCESS':
 		search_name = 0
 		event_type = 1
@@ -326,22 +431,23 @@ def import_sample(params):
 		total = 3
 		freq = 4
 	
-	# import
+	# INITIALIZE THE EVENT_FREQS CONTAINER AS A LIST (FOR --COMPARE-EVENT) OR DICTIONARY (FOR --COMPARE-PROCESS)
 	event_freqs = [] if event_type == None else {'modloads':None, 'regmods':None, 'childprocs':None, 'filemods':None, 'netconns':None, 'crossprocs':None}
 	file = open(file_path, 'r')
 	skip = True
 	for line in file:
+		# SKIP THE FIRST LINE IN THE FILE (I.E. THE HEADERS)
 		if skip:
-			# skip the first line
 			skip = False
 		else:	
-			# retrieve the values from the line
+			# EXTRACT THE VALUES FROM THE LINE IN THE FILE AND REMOVE QUOTATION MARKS
 			path_value = line.split(',')[path].replace('\'','')
 			freq_value = line.split(',')[freq].replace('\'','')
 			freq_value = freq_value.replace('\n','')
 			count_value = line.split(',')[count].replace('\'','')
 			total_value = line.split(',')[total].replace('\'','')
 			if not event_type == None:
+				# IF RUNNING IN --COMPARE-PROCESS MODE, RETRIEVE THE EVENT_TYPE VALUE
 				event_type_value = '{}s'.format(line.split(',')[event_type].replace('\'',''))
 				if not event_freqs[event_type_value] == None:
 					event_freqs[event_type_value].append(EventFreq(path_value, freq_value, count_value, total_value))
@@ -353,6 +459,9 @@ def import_sample(params):
 	file.close()	
 	return event_freqs
 
+# THIS FUNCTION CHECKS WHETHER THE NECESSARY FILE DIRECTORIES
+# EXISTS IN THE JETFREQ WORKING DIRECTORY AND CREATES THEM
+# IF NECESSARY
 def check_for_sample_dir():
 	dirs = [
 		"./samples",
@@ -367,17 +476,21 @@ def check_for_sample_dir():
 		except OSError:
 			pass
 
+# THIS FUNCTION FORMATS THE CURRENT DATE TIME INTO
+# A STRING APPROPRIATE FOR A FILE NAME
 def format_datetime():
 	dt = str(datetime.now())
 
-	# remove colons and periods
+	# REMOVE COLONS AND PERIODS
 	dt = re.sub(r'(:|\.)', '-', dt)
 	
-	# remove whitespace
+	# REMOVE WHITESPACE
 	dt = re.sub(r'\s', '_', dt)
 	
 	return dt
 
+# THIS FUNCTION CHECKS THE JETFREQ MODE AND CREATES
+# AN APPROPRIATE SUB DIRECTORY PREFIX FOR THE FILENAME
 def build_sub_dir(params):
 	if params['mode'] == 'BY_EVENT':
 		return 'event'
@@ -387,21 +500,42 @@ def build_sub_dir(params):
 		return 'event/diff'
 	return 'process'
 
+# THIS FUNCTION AUTOMATICALLY GENERATES A FILEPATH IN 
+# WHICH TO SAVE THE CONTENTS OF A JETFREQ QUERY 
 def build_file_path(params):
 	
 	debug(params['verbose'], 'Creating the file path')
 
-	# create base name
-	file_path = './samples/{}/{}_s-{}_e-{}_n-{}_t-{}'.format(build_sub_dir(params), format_datetime(), params['search_name'], get_event_type_flags(params), params['sample_size'], params['threshold'])
+	# GENERATE THE BASE NAME OF THE FILE
+	file_path = './samples/{}/{}_s-{}_e-{}_n-{}'.format(
+		build_sub_dir(params), 
+		format_datetime(), 
+		params['search_name'].replace('\\', '__BS__'), 
+		get_event_type_flags(params), 
+		params['sample_size']
+	)
+	if params['threshold_lt'] == None:
+		file_path += "_t-None"
+	else:
+		file_path += "_t-{}".format(params['threshold_lt'])
+	if params['threshold_gt'] == None:
+		file_path += "_T-None"
+	else:
+		file_path += "_T-{}".format(params['threshold_gt'])
 
-	# add user name filter
-	if not params['user_name'] == None:
-		file_path += '_u-{}'.format(params['user_name']).lower()
+	# APPEND THE USER NAME FILTERS, IF THEY EXIST
+	if params['user_name'] != None:
+		file_path += '_u-{}'.format(params['user_name'].lower())
+	elif params['exclude_user'] != None:
+		file_path += '_U-{}'.format(params['exclude_user'].lower())
 	
-	# add host name filter
-	if not params['host_name'] == None:
-		file_path += '_h-{}'.format(params['host_name']).lower()
-
+	# APPEND THE HOST NAME FILTERS, IF THEY EXIST
+	if params['host_name'] != None:
+		file_path += '_h-{}'.format(params['host_name'].lower())
+	elif params['exclude_host'] != None:
+		file_path += '_H-{}'.format(params['exclude_host'].lower())
+	
+	# APPEND THE FILE NAME FOR THE REPRESENTATIVE SAMPLE IF WRITING A 'COMPARE' MODE REPORT
 	if not re.match(r'^COMPARE_', params['mode']) == None:
 		dt = params['import_sample']
 		if '/' in params['import_sample']:
@@ -410,10 +544,11 @@ def build_file_path(params):
 		dt = re.split(r'_s-', dt)[0]
 		file_path += '_i-{}'.format(dt)
 	
-	# add file extension
+	# CLOSE FILE PATH WITH CSV EXTENSION
 	file_path += '.csv'
 	
-	# check that file already exists (highly unlikely)
+	# ALTHOUGH HIGHLY UNLIKELY BECAUSE OF THE TIME STAMP, IF THE FILE
+	# ALREADY EXISTS, APPEND A NUMERAL ON THE END OF THE FILENAME
 	sn = 0
 	while os.path.isfile(file_path):
 		sn = sn + 1
@@ -424,22 +559,28 @@ def build_file_path(params):
 
 	return file_path
 
+# THIS IS THE MAIN FUNCTION FOR WRITING THE RESULTS OF A --COMPARE-PROCESS
+# QUERY TO FILE
 def out_file_compare_process(params, event_diffs):
-	# check for no results
+	# CHECK THAT THERE ARE INDEED RESULTS
 	no_results = True
 	for key in event_diffs:
 		if len(event_diffs[key]) > 0:
 			no_results = False
+	# IF NOT, GO NO FURTHER
 	if no_results:
 		raise jfexceptions.NoDiffsFoundError(params['search_name'], params['import_sample'])
-
+	
+	# CHECK THAT THE APPROPRIATE DIRECTORIES EXIST
+	# GENERATE THE FILE PATH AND RETRIEVE THE REPRESENTATIVE SAMPLE PARAMETERS
 	check_for_sample_dir()
 	file_path = build_file_path(params)
 	rep_params = get_params_from_file_name(params['import_sample'])
 	difftype = DiffType()	
 
 	debug(params['verbose'], 'Writing to file {}'.format(file_path))
-
+	
+	# WRITE THE EVENT DIFFERENCES TO FILE
 	file = open(file_path, 'w')
 	file.write('\'event_type\',\'diff_type\',\'tar_process\',\'tar_event\',\'tar_freq\',\'tar_count\',\'tar_total\',\'rep_process\',\'rep_event\',\'rep_freq\',\'rep_count\',\'rep_total\'\n')
 	for key in event_diffs:
@@ -470,7 +611,7 @@ def out_file_compare_process(params, event_diffs):
 						event_diff.representative_event.total
 						)
 					)
-				else: # difftype.HIGH_FQ_*
+				else:
 					file.write('\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\',\'{}\'\n'.format(
 						key,
 						event_diff.difftype,
@@ -489,17 +630,23 @@ def out_file_compare_process(params, event_diffs):
 	file.close()
 	return file_path
 
+# THIS IS THE MAIN FUNCTION FOR WRITING THE RESULTS OF 
+# A --COMPARE-EVENT QUERY TO FILE
 def out_file_compare_event(params, event_diffs):
-	# check for no results
+	# IF THERE ARE NO RESULTS, GO NO FURTHER
 	if len(event_diffs) == 0:
 		raise NoDiffsFoundError(params['search_name'], params['import_sample'])
-
+	
+	# CHECK THAT THE APPROPRIATE DIRECTORY EXISTS, GENERATE
+	# THE FILE NAME AND RETRIEVE THE PARAMETERS USED IN THE
+	# REPRESENTATIVE SAMPLE
 	check_for_sample_dir()
 	file_path = build_file_path(params)
 	rep_params = get_params_from_file_name(params['import_sample'])
 	difftype = DiffType()
 	event_diffs = sort_event_diffs_by_type(event_diffs)
 	
+	# RETRIEVE THE EVENT TYPE USED IN THE QUERY
 	target_event_type = 'modload'
 	if params['regmods'] == True:
 		target_event_type = 'regmod'
@@ -511,7 +658,8 @@ def out_file_compare_event(params, event_diffs):
 		target_event_type = 'netconn'
 	
 	debug(params['verbose'], 'Writing to file {}'.format(file_path))
-
+	
+	# WRITE TO FILE
 	file = open(file_path, 'w')
 	file.write('\'diff_type\',\'tar_event\',\'tar_process\',\'tar_freq\',\'tar_count\',\'tar_total\',\'rep_event\',\'rep_process\',\'rep_freq\',\'rep_count\',\'rep_total\'\n'.format())	
 	for event_diff in event_diffs:
@@ -555,15 +703,19 @@ def out_file_compare_event(params, event_diffs):
 	file.close()
 	return file_path
 
+# THIS IS THE MAIN FUNCTION FOR WRITING THE RESULTS OF A
+# --BY-EVENT QUERY TO FILE
 def out_file_by_event(params, event_freqs):
-	# check for no results
+	# IF THERE ARE NO RESULTS, GO NO FURTHER
 	if len(event_freqs) == 0:
 		raise jfexceptions.NoEventsFoundError(params['search_name'])
-
+	
+	# CHECK THAT THE APPROPRIATE DIRECTORY EXISTS AND 
+	# GENERATE THE FILE PATH
 	check_for_sample_dir()
 	file_path = build_file_path(params)
 	
-	#get the event type for the column header
+	# GET THE EVENT TYPE USED IN THE QUERY
 	event_type = 'modload'
 	if params['filemods'] == True:
 		event_type = 'filemod'
@@ -575,6 +727,8 @@ def out_file_by_event(params, event_freqs):
 		event_type = 'netconn'
 
 	debug(params['verbose'], 'Writing to file {}'.format(file_path))
+
+	# WRITE TO FILE
 	file = open(file_path, 'w')
 	file.write('\'{}\',\'path\',\'count\',\'total\',\'frequency\'\n'.format(event_type))
 	for event in event_freqs:
@@ -582,20 +736,26 @@ def out_file_by_event(params, event_freqs):
 	file.close()
 	return file_path
 	
-
+# THIS IS THE MAIN FUNCTION FOR WRITING THE RESULTS
+# OF A --BY-PROCESS QUERY TO FILE
 def out_file_by_process(params, event_freqs):
-	check_for_sample_dir()
-	file_path = build_file_path(params)
-	
+	# CHECK THAT THERE ARE INDEED RESULTS
 	no_results = True
 	for key in event_freqs:
 		if not event_freqs[key] == None:
 			no_results = False
+	# IF NOT, THOU SHALT NOT PASSETH
 	if no_results:
 		raise jfexceptions.NoEventsFoundError(params['search_name'])
+	
+	# CHECK THAT THE APPROPRIATE DIRECTORY EXISTS
+	# AND GENERATE THE FILE PATH
+	check_for_sample_dir()
+	file_path = build_file_path(params)
 
-	# write to file
 	debug(params['verbose'], 'Writing to file {}'.format(file_path))
+
+	# WRITE TO FILE
 	file = open(file_path, 'w')
 	file.write('\'process\',\'event_type\',\'path\',\'count\',\'total\',\'freq\'\n')
 	if not event_freqs['modloads'] == None:
@@ -625,6 +785,8 @@ def out_file_by_process(params, event_freqs):
 	file.close()
 	return file_path
 
+# THIS FUNCTION READS THE README.TXT FILE
+# OUT OUTPUTS THE USAGE SECTION TO STDOUT
 def show_usage():
 	h = open("README.txt", "r")
 	usage = ""
@@ -640,10 +802,14 @@ def show_usage():
 			capture = True
 	print("\nUSAGE:\n{}".format(usage))
 
+# THIS FUNCTION WRITES THE CONTENTS OF THE README.TXT
+# FILE TO STDOUT
 def show_help():
 	h = open("README.txt", "r")
 	print(h.read())
 
+# THIS FUNCTION IMPORTS THE CONTENTS OF THE CONF FILE
+# AND ADDS THEM TO THE PARAMS DICTIONARY
 def import_conf(params):
 	debug(params['verbose'], 'Importing configuration file')
 	conf = open('./conf/jetfreq.cfg', 'r')
@@ -655,20 +821,61 @@ def import_conf(params):
 	conf.close()
 	return params
 
-def homogenize_path(path):
-	if re.match(r'^c:\\users\\', path.lower()) == None:
-		return path
-	else:
-		try:
-			path_ary = path.split('\\')
-			path_ary[2] = '<USER>'
-			return '\\'.join(path_ary)
-		except:
-			debug(True, 'Error homogenizing path {}'.format(path))
+# THIS FUNCTION CHECKS FOR USER SPECIFIC REG KEY ADDRESSES
+# OR USER SPECIFIC FILE DIRECTORIES AND REPLACES THE UNIQUE
+# STRINGS WITH A GENERIC STRING, E.G. 'BROOKES' TO '<USER>'.
+# THIS ENSURES THAT THE SAME FILE OR REG KEY IN DIFFERENT USERS
+# PROFILES OR MACHINES ARE CONSIDERED THE SAME FILE OR REG KEY
+# BY JETFREQ.
+def homogenize_path(path, path_type):
+	if path_type == "reg":
+		# \registry\...\usersettings\<sid>\\
+		# \registry\user\<sid>\
+		if path.lower().startswith('\\registry\\') and '\\usersettings\\' in path:
+			try:
+				path_ary = path.split('\\')
+				sid = False
+				for i in range(len(path_ary)):
+					if sid == True:
+						path_ary[i] = "<SID>"
+						sid = False
+						break
+					elif path_ary[i] == "usersettings":
+						sid = True
+				return '\\'.join(path_ary)
+			except:
+				debug(True, 'Error homogenizing regmod path {}'.format(path))
+				return path
+		elif path.lower().startswith('\\registry\\user\\'):
+			try:
+				path_ary = path.split('\\')
+				path_ary[3] = '<SID>'
+				return '\\'.join(path_ary)
+			except:
+				debug(True, 'Error homogenizing regmod path {}'.format(path))
+		else:
 			return path
+	elif path_type == "dir":
+		# c:\users\<user>\
+		if path.lower().startswith('c:\\users\\'):
+			try:
+				path_ary = path.split('\\')
+				path_ary[2] = '<USER>'
+				return '\\'.join(path_ary)
+			except:
+				debug(True, 'Error homogenizing path {}'.format(path))
+				return path
+		else:
+			return path
+	else:
+		return path
 
-def get_event_paths(events, col):
+# THIS FUNCTION EXTRACTS THE PATH OF AN EVENT FROM THE 
+# DATA RETURNED BY THE CARBON BLACK REST API. AS EACH 
+# EVENT TYPE HAS A UNIQUE FORMAT, THE COLUMN MUST
+# BE DEFINED.
+def get_event_paths(events, col, path_type):
 	paths = []
 	for event in events:
-		paths.append(homogenize_path(event.split('|')[col]))
+		paths.append(homogenize_path(event.split('|')[col], path_type))
 	return paths
