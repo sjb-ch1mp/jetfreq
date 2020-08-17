@@ -19,6 +19,20 @@ def debug(verbose, message):
 		else:
 			print("jetfreq.py: {}".format(message))
 
+# THIS FUNCTION TRUNCATES ANY PATH WITH A HIERARCHY GREATER THAN
+# 4 DOWN TO THE FIRST 3 AND THE LAST 1 FOR BREVITY
+def truncate_path(path, path_type):
+	depth = 4 if path_type == 'dir' else 6;
+	if '\\' in path:
+		path_ary = path.split('\\')
+		if len(path_ary) > depth:
+			path = '\\'.join(path_ary[0:depth - 1]) + '\\ ... \\' + path_ary[len(path_ary) - 1]
+	elif '/' in path:
+		path_ary = path.split('/')
+		if len(path_ary) > depth:
+			path = '/'.join(path_ary[0:depth - 1]) + '/ ... /' + path_ary[len(path_ary) - 1]
+	return path
+
 # THIS FUNCTION SORT A LIST OF EVENT_DIFF OBJECTS 
 # ALPHABETICALLY BY THEIR DIFFTYPE VALUE
 def sort_event_diffs_by_type(event_diffs):
@@ -34,34 +48,56 @@ def sort_event_diffs_by_type(event_diffs):
 
 # THIS FUNCTION FORMATS THE CONTENTS OF EVENT_DIFF OBJECTS
 # AND APPENDS IT TO THE REPORT LIST 
-def append_diff_to_report(report, event_diffs, event_type):
+def append_diff_to_report(report, event_diffs, event_type, truncate):
 	dt = DiffType()
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
-
+	
+	path_type = 'reg' if event_type.upper().startswith('REGMOD') else 'dir'
 	event_diffs = sort_event_diffs_by_type(event_diffs)
 	for diff in event_diffs:
 		if diff.difftype == dt.MISS_FM_REP:
-			report.append(':::::: {} | {}'.format(diff.difftype, diff.target_event.path))
+			report.append(':::::: {} | {}'.format(
+				diff.difftype, 
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
 		elif diff.difftype == dt.MISS_FM_TAR:
-			report.append(':::::: {} | {}'.format(diff.difftype, diff.representative_event.path))
+			report.append(':::::: {} | {}'.format(
+				diff.difftype, 
+				truncate_path(diff.representative_event.path, path_type) if truncate else diff.representative_event.path))
 		elif diff.difftype == dt.HIGH_FQ_REP:
-			report.append(':::::: {} | {} | {} > {}'.format(diff.difftype, diff.target_event.path, diff.representative_event.perc, diff.target_event.perc))
+			report.append(':::::: {} | {} | {} > {}'.format(
+				diff.difftype, 
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path,
+				diff.representative_event.perc, 
+				diff.target_event.perc))
 		elif diff.difftype == dt.HIGH_FQ_TAR:
-			report.append(':::::: {} | {} | {} > {}'.format(diff.difftype, diff.target_event.path, diff.target_event.perc, diff.representative_event.perc))
+			report.append(':::::: {} | {} | {} > {}'.format(
+				diff.difftype, 
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path,
+				diff.target_event.perc, 	
+				diff.representative_event.perc))
 		elif not re.match(r'TAR_MISS_', diff.difftype) == None:
-			report.append(':::::: {} | {}'.format(diff.difftype, diff.representative_event.path))
+			report.append(':::::: {} | {}'.format(
+				diff.difftype, 
+				truncate_path(diff.representative_event.path, path_type) if truncate else diff.representative_event.path))
 		elif not re.match(r'REP_MISS_', diff.difftype) == None:
-			report.append(':::::: {} | {}'.format(diff.difftype, diff.target_event.path))
+			report.append(':::::: {} | {}'.format(
+				diff.difftype, 
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
 	return report
 
 # THIS FUNCTION FORMATS THE CONTENTS OF EVENT_FREQ OBJECTS
 # AND APPENDS IT TO THE REPORT LIST
-def append_to_report(report, event_freqs, event_type):
+def append_to_report(report, event_freqs, event_type, truncate):
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
+	path_type = 'reg' if event_type.upper().startswith('REGMOD') else 'dir'
 	for event in event_freqs:
-		report.append(':::::: {}/{} | {:8.4f} | {}'.format(event.count, event.total, event.perc, event.path))
+		report.append(':::::: {}/{} | {:8.4f} | {}'.format(
+			event.count, 
+			event.total, 
+			event.perc, 
+			truncate_path(event.path, path_type) if truncate else event.path))
 	return report
 
 # THIS IS THE MAIN FUNCTION FOR FORMATTING THE RESULTS
@@ -105,17 +141,17 @@ def format_report_by_process(params, event_freqs):
 
 	# APPEND THE EVENTS TO THE REPORT
 	if not event_freqs['modloads'] == None and len(event_freqs['modloads']) > 0:
-		report = append_to_report(report, event_freqs['modloads'], 'MODLOADS')
+		report = append_to_report(report, event_freqs['modloads'], 'MODLOADS', params['truncate'])
 	if not event_freqs['regmods'] == None and len(event_freqs['regmods']) > 0:
-		report = append_to_report(report, event_freqs['regmods'], 'REGMODS')
+		report = append_to_report(report, event_freqs['regmods'], 'REGMODS', params['truncate'])
 	if not event_freqs['childprocs'] == None and len(event_freqs['childprocs']) > 0:
-		report = append_to_report(report, event_freqs['childprocs'], 'CHILDPROCS')
+		report = append_to_report(report, event_freqs['childprocs'], 'CHILDPROCS', params['truncate'])
 	if not event_freqs['filemods'] == None and len(event_freqs['filemods']) > 0:
-		report = append_to_report(report, event_freqs['filemods'], 'FILEMODS')
+		report = append_to_report(report, event_freqs['filemods'], 'FILEMODS', params['truncate'])
 	if not event_freqs['netconns'] == None and len(event_freqs['netconns']) > 0:
-		report = append_to_report(report, event_freqs['netconns'], 'NETCONNS')
+		report = append_to_report(report, event_freqs['netconns'], 'NETCONNS', params['truncate'])
 	if not event_freqs['crossprocs'] == None and len(event_freqs['crossprocs']) > 0:
-		report = append_to_report(report, event_freqs['crossprocs'], 'CROSSPROCS')
+		report = append_to_report(report, event_freqs['crossprocs'], 'CROSSPROCS', params['truncate'])
 
 	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
@@ -169,7 +205,7 @@ def format_report_by_event(params, event_freqs):
 		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
 
 	# APPEND THE PROCESSES TO THE REPORT
-	report = append_to_report(report, event_freqs, 'PROCESSES')
+	report = append_to_report(report, event_freqs, 'PROCESSES', params['truncate'])
 
 	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
@@ -305,7 +341,7 @@ def format_report_compare_process(params, event_freqs):
 	# APPEND THE EVENT DIFFERENCES TO THE REPORT
 	for key in event_freqs:
 		if not event_freqs[key] == None and len(event_freqs[key]) > 0:
-			report = append_diff_to_report(report, event_freqs[key], key.upper())
+			report = append_diff_to_report(report, event_freqs[key], key.upper(), params['truncate'])
 
 	# CLOSE AND RETURN REPORT
 	report.append('::::::')
@@ -370,7 +406,7 @@ def format_report_compare_event(params, event_freqs):
 		report.append(':::::: exclude_host = {}'.format(params['exclude_host']))
 
 	# APPEND THE PROCESS DIFFERENCES TO THE REPORT
-	report = append_diff_to_report(report, event_freqs, 'PROCESSES')
+	report = append_diff_to_report(report, event_freqs, 'PROCESSES', params['truncate'])
 
 	# CLOSE AND RETURN THE REPORT
 	report.append('::::::')
