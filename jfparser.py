@@ -43,6 +43,11 @@ def check_params(params):
 	# CHECK THAT THE GREATER-THAN AND LESS-THAN THRESHOLD VALUES ARE NOT EQUAL
 	if params['threshold_gt'] == params['threshold_lt']:
 		raise jfexceptions.NonsensicalThresholdValuesError(params['threshold_gt'], params['threshold_lt'])
+	
+	# DO NOT TRUNCATE IF WRITING
+	if params['write_file'] and params['truncate']:
+		params['truncate'] = False
+		jfutil.debug(True, 'JetFreq does not truncate when writing to file. Ignoring -k flag.')
 
 	return params
 
@@ -69,6 +74,7 @@ def process_params(args):
 		"d":{"name":"netconns","param":False,"assigned":False},
 		"x":{"name":"crossprocs","param":False,"assigned":False},
 		"m":{"name":"modloads","param":False,"assigned":False},
+		"k":{"name":"truncate","param":False,"assigned":False},
 		"by-process":{"name":"BY_PROCESS","param":False,"assigned":False},
 		"by-event":{"name":"BY_EVENT","param":False,"assigned":False},
 		"help":{"name":"SHOW_HELP","param":False,"assigned":False},
@@ -93,6 +99,7 @@ def process_params(args):
 		"threshold_lt":100,
 		"threshold_gt":0,
 		"verbose":False,
+		"truncate":False,
 		"regmods":False,
 		"filemods":False,
 		"childprocs":False,
