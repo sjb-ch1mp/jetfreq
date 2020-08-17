@@ -18,10 +18,10 @@ access it. Running jetfreq.py in 'Compare Mode' allows users to compare a target
 
 Usage:
 
-By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wv]'
-By Event Mode : './jetfreq.py --by-event -m|r|f|c|d <search_name> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vw]'
-Compare Processes : './jetfreq.py --compare-process <search_name> -i <sample_file> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wv]'
-Compare Events : './jetfreq.py --compare-event -m|r|f|c|d <search_name> -i <sample_file> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vw]'
+By Process Mode : './jetfreq.py [--by-process] <search_name> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wvk]'
+By Event Mode : './jetfreq.py --by-event -m|r|f|c|d <search_name> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vwk]'
+Compare Processes : './jetfreq.py --compare-process <search_name> -i <sample_file> -m|r|f|c|d|x [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -wvk]'
+Compare Events : './jetfreq.py --compare-event -m|r|f|c|d <search_name> -i <sample_file> [{-u|-U} <username> {-h|-H} <hostname> -s <start_time> -n <sample_size> {-t|-T} <threshold> -vwk]'
 Show Help : './jetfreq.py --help'
 
 Parameters:
@@ -56,6 +56,7 @@ search_name : The name of the process or modload
 -d : Include netconns in results (--by-process) | Search for netconn (--by-event)
 -x : Include crossprocs in results (--by-process only)
 -m : Include modloads in results (--by-process) | Search for modload (--by-event)
+-k : Truncates any directory path with greater than 4 levels to 4, or registry key paths with greater than 6 levels to 6.
 
 File name syntax:
 
