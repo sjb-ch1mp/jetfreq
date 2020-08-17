@@ -42,7 +42,7 @@ class DiffType():
 		self.TAR_MISS_X = 'TARGET SAMPLE HAS NO CROSSPROCS, BUT REPRESENTATIVE SAMPLE DOES'
 	
 	# TAKES AN EVENT TYPE AND RETURNS THE CORRESPONDING DIFFERENCE TYPE
-	def get_diff_type_by_event(event_type, sample):
+	def get_diff_type_by_event(self, event_type, sample):
 		if sample == 'rep':
 			if event_type == 'modloads':
 				return self.REP_MISS_M
