@@ -52,37 +52,41 @@ def append_diff_to_report(report, event_diffs, event_type, truncate):
 	dt = DiffType()
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
-	
+	report.append(':::::: {:<61} | {:<15} | PATH'.format('DIFFERENCE TYPE', 'FREQ'))	
+	report.append(':::::: --------------------------------------------------------------|-----------------|------>')
+
 	path_type = 'reg' if event_type.upper().startswith('REGMOD') else 'dir'
 	event_diffs = sort_event_diffs_by_type(event_diffs)
 	for diff in event_diffs:
 		if diff.difftype == dt.MISS_FM_REP:
-			report.append(':::::: {} | {}'.format(
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
+				'n/a',
 				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
 		elif diff.difftype == dt.MISS_FM_TAR:
-			report.append(':::::: {} | {}'.format(
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
+				'n/a',
 				truncate_path(diff.representative_event.path, path_type) if truncate else diff.representative_event.path))
 		elif diff.difftype == dt.HIGH_FQ_REP:
-			report.append(':::::: {} | {} | {} > {}'.format(
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
-				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path,
-				diff.representative_event.perc, 
-				diff.target_event.perc))
+				'{:<6.4f} > {:<6.4f}'.format(float(diff.representative_event.perc), float(diff.target_event.perc)),
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
 		elif diff.difftype == dt.HIGH_FQ_TAR:
-			report.append(':::::: {} | {} | {} > {}'.format(
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
-				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path,
-				diff.target_event.perc, 	
-				diff.representative_event.perc))
-		elif not re.match(r'TAR_MISS_', diff.difftype) == None:
-			report.append(':::::: {} | {}'.format(
+				'{:<6.4f} > {:<6.4f}'.format(float(diff.target_event.perc), float(diff.representative_event.perc)),
+				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
+		elif diff.difftype.startswith('TARGET SAMPLE HAS NO'):
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
+				'n/a',
 				truncate_path(diff.representative_event.path, path_type) if truncate else diff.representative_event.path))
-		elif not re.match(r'REP_MISS_', diff.difftype) == None:
-			report.append(':::::: {} | {}'.format(
+		elif diff.difftype.startswith('REPRESENTATIVE SAMPLE HAS NO'):
+			report.append(':::::: {:<61} | {:<15} | {}'.format(
 				diff.difftype, 
+				'n/a',
 				truncate_path(diff.target_event.path, path_type) if truncate else diff.target_event.path))
 	return report
 
@@ -91,11 +95,12 @@ def append_diff_to_report(report, event_diffs, event_type, truncate):
 def append_to_report(report, event_freqs, event_type, truncate):
 	report.append('::::::')
 	report.append(':::::: {}'.format(event_type))
+	report.append(':::::: RATIO   | FREQ   | PATH')
+	report.append(':::::: --------|--------|------->')
 	path_type = 'reg' if event_type.upper().startswith('REGMOD') else 'dir'
 	for event in event_freqs:
-		report.append(':::::: {}/{} | {:8.4f} | {}'.format(
-			event.count, 
-			event.total, 
+		report.append(':::::: {:<7} | {:<6.4f} | {}'.format(
+			'{}/{}'.format(event.count, event.total), 
 			event.perc, 
 			truncate_path(event.path, path_type) if truncate else event.path))
 	return report
@@ -863,7 +868,10 @@ def import_conf(params):
 # THIS ENSURES THAT THE SAME FILE OR REG KEY IN DIFFERENT USERS
 # PROFILES OR MACHINES ARE CONSIDERED THE SAME FILE OR REG KEY
 # BY JETFREQ.
-def homogenize_path(path, path_type):
+def homogenize_path(path, path_type, homogenize):
+	if not homogenize:
+		return path
+
 	if path_type == "reg":
 		# \registry\...\usersettings\<sid>\\
 		# \registry\user\<sid>\
@@ -893,7 +901,7 @@ def homogenize_path(path, path_type):
 			return path
 	elif path_type == "dir":
 		# c:\users\<user>\
-		if path.lower().startswith('c:\\users\\'):
+		if path.lower().startswith('c:\\users\\') or path.lower().startswith('\\users\\'):
 			try:
 				path_ary = path.split('\\')
 				path_ary[2] = '<USER>'
@@ -910,8 +918,28 @@ def homogenize_path(path, path_type):
 # DATA RETURNED BY THE CARBON BLACK REST API. AS EACH 
 # EVENT TYPE HAS A UNIQUE FORMAT, THE COLUMN MUST
 # BE DEFINED.
-def get_event_paths(events, col, path_type):
+def get_event_paths(events, col, path_type, homogenize):
 	paths = []
 	for event in events:
-		paths.append(homogenize_path(event.split('|')[col], path_type))
+		paths.append(homogenize_path(event.split('|')[col], path_type, homogenize))
 	return paths
+
+# THIS FUNCTION CHECKS FOR ATTEMPTS TO GENERATE VERY LARGE
+# SAMPLE SIZES AND WARNS THE USER THAT DUE THE VOLUME OF 
+# DATA, A QUERY WITH A LARGE SAMPLE SIZE MAY TAKE SOME TIME
+# TO GENERATE
+def throttle(params):
+	if params['mode'].upper().endswith('HELP'):
+		return
+	elif params['mode'].upper().endswith('PROCESS'):
+		if (params['mode'].upper().endswith('PROCESS') and int(params['sample_size']) >= 200) or (params['mode'].upper().endswith('EVENT') and int(params['sample_size']) >= 1000):
+			debug(True, 'Consider reducing the sample size.')
+			debug(True, 'A sample size of {} in {} mode may generate a large amount of data and require a significant amount of time to process.'.format(params['sample_size'], params['mode']))
+			ans = raw_input('jetfreq.py: Would you like to continue (y/n)? ')
+			if ans.lower() == 'y':
+				return
+			elif ans.lower() == 'n':
+				exit()
+			else:
+				debug(True, 'Invalid response. Aborting.')
+				exit()
