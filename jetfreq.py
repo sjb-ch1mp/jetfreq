@@ -31,6 +31,9 @@ try:
 		"    / / -_) __/ _/ __/ -_) _ `/"," __/ /\__/\__/_//_/  \__/\_, /",
 		"|___/                     /_/"]
 	jfutil.debug(True, banner)
+
+	# CHECK FOR ATTEMPTS TO GENERATE LARGE SAMPLES AND WARN USER
+	jfutil.throttle(params)
 	
 	# GET DATA FOR EVENT OR PROCESS FROM CBR SERVER AND ANALYZE IT 
 	representative_sample = None
