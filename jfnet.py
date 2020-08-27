@@ -77,7 +77,7 @@ def get_data_for_event(params):
 		if 'results' in data:
 			for result in data['results']:
 				process_list.append({
-					'path':jfutil.homogenize_path(result['path'], 'dir'),
+					'path':jfutil.homogenize_path(result['path'], 'dir', params['homogenize']),
 					'process_id':result['id'],
 					'segment_id':result['segment_id']
 				})
@@ -128,7 +128,7 @@ def get_data_for_process(params):
 			event_cnt = event_cnt + 1
 			event = {}
 			jfutil.debug(params['verbose'], "Getting events for result {}".format(event_cnt))
-			url = "/api/v1/process/{}/{}/event".format(i['process_id'], i['segment_id'])
+			url = "/api/v1/process/{}/0/event".format(i['process_id'])
 			response = send_query(params, url)
 			data = json.loads(response.read())
 			
@@ -137,7 +137,7 @@ def get_data_for_process(params):
 				# AND THERE ARE MODLOADS IN THE SEARCH RESULTS...
 				if 'modload_complete' in data['process']:
 					# EXTRACT THE PATHS OF THE EVENTS AND STORE THEM IN THE MODLOADS LIST
-					event['modloads'] = jfutil.get_event_paths(data['process']['modload_complete'], 2, 'dir')
+					event['modloads'] = jfutil.get_event_paths(data['process']['modload_complete'], 2, 'dir', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no modloads".format(event_cnt))
 			# IF THE USER REQUESTED FILEMODS...
@@ -145,7 +145,7 @@ def get_data_for_process(params):
 				# AND THERE ARE FILEMODS IN THE SEARCH RESULTS...
 				if 'filemod_complete' in data['process']:
 					# EXTRACT THE PATHS OF THE EVENTS AND STORE THEM IN THE FILEMODS LIST
-					event['filemods'] = jfutil.get_event_paths(data['process']['filemod_complete'], 2, 'dir')
+					event['filemods'] = jfutil.get_event_paths(data['process']['filemod_complete'], 2, 'dir', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no filemods".format(event_cnt))
 			# IF THE USER REQUESTED REGMODS...
@@ -153,7 +153,7 @@ def get_data_for_process(params):
 				# AND THERE ARE REGMODS IN THE SEARCH RESULTS...
 				if 'regmod_complete' in data['process']:
 					# EXTRACT THE PATHS OF THE EVENTS AND STORE THEM IN THE REGMODS LIST
-					event['regmods'] = jfutil.get_event_paths(data['process']['regmod_complete'], 2, 'reg')
+					event['regmods'] = jfutil.get_event_paths(data['process']['regmod_complete'], 2, 'reg', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no regmods".format(event_cnt))
 			# IF THE USER REQUESTED CHILDPROCS...
@@ -161,7 +161,7 @@ def get_data_for_process(params):
 				# AND THERE ARE CHILDPROCS IN THE SEARCH RESULTS...
 				if 'childproc_complete' in data['process']:
 					# EXTRACT THE PATHS OF THE EVENTS AND STORE THEM IN THE CHILDPROCS LIST
-					event['childprocs'] = jfutil.get_event_paths(data['process']['childproc_complete'], 3, 'dir')
+					event['childprocs'] = jfutil.get_event_paths(data['process']['childproc_complete'], 3, 'dir', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no childprocs".format(event_cnt))
 			# IF THE USER REQUESTED CROSSPROCS...
@@ -169,7 +169,7 @@ def get_data_for_process(params):
 				# AND THERE ARE CROSSPROCS IN THE SEARCH RESULTS...
 				if 'crossproc_complete' in data['process']:
 					# EXTRACT THE PATHS OF THE EVENTS AND STORE THEM IN THE CROSSPROCS LIST
-					event['crossprocs'] = jfutil.get_event_paths(data['process']['crossproc_complete'], 4, 'dir')
+					event['crossprocs'] = jfutil.get_event_paths(data['process']['crossproc_complete'], 4, 'dir', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no crossprocs".format(event_cnt))
 			# IF THE USER REQUESTED NETCONNS...
@@ -177,7 +177,7 @@ def get_data_for_process(params):
 				# AND THERE ARE NETCONNS IN THE SEARCH RESULTS...
 				if 'netconn_complete' in data['process']:
 					# EXTRACT THE DOMAINS OF THE EVENTS AND STORE THEM IN THE NETCONNS LIST
-					event['netconns'] = jfutil.get_event_paths(data['process']['netconn_complete'], 4, 'dir')
+					event['netconns'] = jfutil.get_event_paths(data['process']['netconn_complete'], 4, 'dir', params['homogenize'])
 				else:
 					jfutil.debug(params['verbose'], "Result {} has no netconns".format(event_cnt))
 			# IF ANY REQUESTED EVENTS HAVE BEEN EXTRACTED FROM THIS PROCESS, ADD THEM TO THE EVENT LIST
