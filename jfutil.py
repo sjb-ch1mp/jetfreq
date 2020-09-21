@@ -931,15 +931,14 @@ def get_event_paths(events, col, path_type, homogenize):
 def throttle(params):
 	if params['mode'].upper().endswith('HELP'):
 		return
-	elif params['mode'].upper().endswith('PROCESS'):
-		if (params['mode'].upper().endswith('PROCESS') and int(params['sample_size']) >= 200) or (params['mode'].upper().endswith('EVENT') and int(params['sample_size']) >= 1000):
-			debug(True, 'Consider reducing the sample size.')
-			debug(True, 'A sample size of {} in {} mode may generate a large amount of data and require a significant amount of time to process.'.format(params['sample_size'], params['mode']))
-			ans = raw_input('jetfreq.py: Would you like to continue (y/n)? ')
-			if ans.lower() == 'y':
-				return
-			elif ans.lower() == 'n':
-				exit()
-			else:
-				debug(True, 'Invalid response. Aborting.')
-				exit()
+	elif (params['mode'].upper().endswith('PROCESS') and int(params['sample_size']) > 50) or (params['mode'].upper().endswith('EVENT') and int(params['sample_size']) >= 1000):
+		debug(True, 'Consider reducing the sample size.')
+		debug(True, 'A sample size of {} in {} mode may generate a large amount of data and require a significant amount of time to process.'.format(params['sample_size'], params['mode']))
+		ans = raw_input('jetfreq.py: Would you like to continue (y/n)? ')
+		if ans.lower() == 'y':
+			return
+		elif ans.lower() == 'n':
+			exit()
+		else:
+			debug(True, 'Invalid response. Aborting.')
+			exit()
